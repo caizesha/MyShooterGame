@@ -29,5 +29,14 @@ public:
 	void MoveForward(float value);
 
 	void MoveRight(float value);
+
+protected:
+	//创建蓝图可编辑的相机组件
+	UPROPERTY(EditAnyWhere, Category = "Camera")
+		UCameraComponent *FPCamera;
+
+	//加入第一人称手臂Mesh
+	UPROPERTY(EditAnyWhere, Category = "Mesh")
+		USkeletalMeshComponent* FPArm;
 	
 };

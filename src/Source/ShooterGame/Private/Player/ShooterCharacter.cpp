@@ -24,6 +24,31 @@ AShooterCharacter::AShooterCharacter()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_PROJECTILE,ECR_Block);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_PICKUP, ECR_Ignore);
+
+
+	//创建相机并挂载到根组件上,固定其相对位置，由pawn控制相机的旋转
+	FPCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PawnCamera1p"));
+	FPCamera->SetupAttachment(GetCapsuleComponent());
+	FPCamera->SetRelativeLocation(FVector(0.0f, 0.0f, BaseEyeHeight));
+	FPCamera->bUsePawnControlRotation = true;
+
+	//创建手臂组件，并进行设置
+	FPArm = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PawnArm1p"));
+	FPArm->SetupAttachment(FPCamera);
+	FPArm->bOnlyOwnerSee = true;
+	FPArm->bOwnerNoSee = false;
+	FPArm->bReceivesDecals = false;
+	FPArm->bCastDynamicShadow = false;
+	//骨骼动画的姿态更新只发生在渲染时，效率考量
+	FPArm->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::OnlyTickPoseWhenRendered;
+	//把第一人称mesh的更新组设置到优先于物理更新的组
+	FPArm->PrimaryComponentTick.TickGroup = TG_PrePhysics;
+	//手臂碰撞设置：由于第三人称Mesh有具体的碰撞设置，选择关闭第一人称Mesh的碰撞
+	FPArm->SetCollisionObjectType(ECC_Pawn);
+	FPArm->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	FPArm->SetCollisionResponseToAllChannels(ECR_Ignore);
+	//设置相对位置
+	FPArm->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f - 86.0f - BaseEyeHeight));
 }
 
 // Called when the game starts or when spawned
@@ -48,6 +73,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	//输入信息与对应函数、对象绑定
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight);
+	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AShooterCharacter::AddControllerYawInput);
+	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::AddControllerPitchInput);
 }
 
 
