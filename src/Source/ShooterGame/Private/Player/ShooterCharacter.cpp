@@ -2,7 +2,7 @@
 
 #include "ShooterGame.h"
 #include "ShooterCharacter.h"
-
+#include "shooterWeapon.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -77,6 +77,20 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::AddControllerPitchInput);
 }
 
+void AShooterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	CurrentWeapon = GetWorld()->SpawnActor<AShooterWeapon>(ShooterWeaponClass, SpawnInfo);
+
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetPawnOwner(this);
+		CurrentWeapon->AttachMeshToPawn();
+	}
+}
 
 void AShooterCharacter::MoveForward(float value)
 {
@@ -99,4 +113,15 @@ void AShooterCharacter::MoveRight(float value)
 		FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 		AddMovementInput(Direction, value);
 	}
+}
+
+USkeletalMeshComponent* AShooterCharacter::GetFirstPersonMesh()
+{
+	return FPArm;
+}
+
+FName AShooterCharacter::GetWeaponAttachPoint() const
+{
+
+	return WeaponAttachPoint;
 }

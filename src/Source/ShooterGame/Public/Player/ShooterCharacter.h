@@ -5,6 +5,9 @@
 #include "GameFramework/Character.h"
 #include "ShooterCharacter.generated.h"
 
+
+class AShooterWeapon;
+
 UCLASS()
 class SHOOTERGAME_API AShooterCharacter : public ACharacter
 {
@@ -25,11 +28,15 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void PostInitializeComponents() override;
 	//process character's move
 	void MoveForward(float value);
 
-	void MoveRight(float value);
+	void MoveRight(float value); 
 
+	USkeletalMeshComponent* GetFirstPersonMesh();
+
+	FName GetWeaponAttachPoint() const;
 protected:
 	//创建蓝图可编辑的相机组件
 	UPROPERTY(EditAnyWhere, Category = "Camera")
@@ -38,5 +45,13 @@ protected:
 	//加入第一人称手臂Mesh
 	UPROPERTY(EditAnyWhere, Category = "Mesh")
 		USkeletalMeshComponent* FPArm;
+
+	UPROPERTY(EditAnyWhere, Category = "Weapon")
+	TSubclassOf<AShooterWeapon> ShooterWeaponClass;
+
+	AShooterWeapon* CurrentWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName WeaponAttachPoint;
 	
 };
