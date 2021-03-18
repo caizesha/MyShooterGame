@@ -2,7 +2,8 @@
 
 #include "ShooterGame.h"
 #include "ShooterCharacter.h"
-#include "shooterWeapon.h"
+#include "ShooterWeapon.h"
+#include "ShooterPlayerController.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -49,6 +50,9 @@ AShooterCharacter::AShooterCharacter()
 	FPArm->SetCollisionResponseToAllChannels(ECR_Ignore);
 	//设置相对位置
 	FPArm->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f - 86.0f - BaseEyeHeight));
+
+	//设置默认瞄准关闭
+	bIsTargeting = false;
 }
 
 // Called when the game starts or when spawned
@@ -73,8 +77,15 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	//输入信息与对应函数、对象绑定
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight);
+	
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AShooterCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::AddControllerPitchInput);
+
+	PlayerInputComponent->BindAction(TEXT("AimAt"), IE_Pressed, this, &AShooterCharacter::OnStartTargeting);
+	PlayerInputComponent->BindAction(TEXT("AimAt"), IE_Released, this, &AShooterCharacter::OnStopTargeting);
+
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &AShooterCharacter::OnStartFire);
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &AShooterCharacter::OnStopFire);
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -125,3 +136,58 @@ FName AShooterCharacter::GetWeaponAttachPoint() const
 
 	return WeaponAttachPoint;
 }
+
+FRotator AShooterCharacter::GetAimOffset() const
+{
+	FVector AimDirectionWS = GetBaseAimRotation().Vector();
+	FVector AimDirectionLS = ActorToWorld().InverseTransformVectorNoScale(AimDirectionWS);
+	return AimDirectionLS.Rotation();
+}
+
+void AShooterCharacter::OnStartTargeting()
+{
+	AShooterPlayerController* Player = Cast<AShooterPlayerController>(Controller);
+	if (Player)
+	{
+		SetIsTargeting(true);
+	}
+
+}
+
+void AShooterCharacter::OnStopTargeting()
+{
+	SetIsTargeting(false);
+}
+
+bool AShooterCharacter::GetIsTargeting() const
+{
+	return bIsTargeting;
+}
+
+void AShooterCharacter::SetIsTargeting(bool bNewIsTargeting)
+{
+	bIsTargeting = bNewIsTargeting;
+}
+
+void AShooterCharacter::OnStartFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StartFire();
+	}
+}
+
+void AShooterCharacter::OnStopFire()
+{
+
+}
+
+float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	if (ActualDamage > 0.0) {
+		Health -= ActualDamage;
+	}
+	return ActualDamage;
+}
+

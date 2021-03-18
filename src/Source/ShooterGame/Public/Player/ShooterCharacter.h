@@ -37,14 +37,33 @@ public:
 	USkeletalMeshComponent* GetFirstPersonMesh();
 
 	FName GetWeaponAttachPoint() const;
+
+	UFUNCTION(BlueprintCallable, Category="Weapon")
+	FRotator GetAimOffset() const;
+
+	void OnStartTargeting();
+
+	void OnStopTargeting();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	bool GetIsTargeting() const;
+
+	void SetIsTargeting(bool bNewIsTargeting);
+
+	void OnStartFire();
+
+	void OnStopFire();
+
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
 protected:
 	//创建蓝图可编辑的相机组件
 	UPROPERTY(EditAnyWhere, Category = "Camera")
-		UCameraComponent *FPCamera;
+	UCameraComponent *FPCamera;
 
 	//加入第一人称手臂Mesh
 	UPROPERTY(EditAnyWhere, Category = "Mesh")
-		USkeletalMeshComponent* FPArm;
+	USkeletalMeshComponent* FPArm;
 
 	UPROPERTY(EditAnyWhere, Category = "Weapon")
 	TSubclassOf<AShooterWeapon> ShooterWeaponClass;
@@ -53,5 +72,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponAttachPoint;
+
+	bool bIsTargeting;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float Health;
 };

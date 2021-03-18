@@ -24,12 +24,30 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, Category = "Mesh")
-	USkeletalMeshComponent* WeaponMesh1P;
-
 	void SetPawnOwner(AShooterCharacter* pawnOwner);
 	void AttachMeshToPawn();
 
+	//获取子弹发射方向
+	FVector GetAdjustAim();
+
+	virtual void FireWeapon();
+
+	FVector GetMuzzleLocation();
+
+	void StartFire();
+
+	void SimulateWeaponFire();
+
+	UAudioComponent* PlayWeaponSound(USoundCue *Sound);
+protected:
+	UPROPERTY(EditAnywhere, Category = "Mesh")
+	USkeletalMeshComponent* WeaponMesh1P;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName MuzzleAttachPoint;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundCue *FireSound;
 private:
 	AShooterCharacter* PawnOwner;
 	

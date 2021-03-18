@@ -3,6 +3,7 @@
 #include "ShooterGame.h"
 #include "ShooterWeapon.h"
 #include "ShooterCharacter.h"
+#include "ShooterPlayerController.h"
 
 
 // Sets default values
@@ -22,6 +23,7 @@ AShooterWeapon::AShooterWeapon()
 	FTransform  newTransform(FRotator(0.0f, 0.0f, -90.0f));
 	WeaponMesh1P->SetRelativeTransform(newTransform);
 
+	FireSound = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -40,7 +42,13 @@ void AShooterWeapon::Tick(float DeltaTime)
 
 void AShooterWeapon::SetPawnOwner(AShooterCharacter* pawnOwner)
 {
-	PawnOwner = pawnOwner;
+
+	if (PawnOwner != pawnOwner)
+	{
+		Instigator = pawnOwner;
+		PawnOwner = pawnOwner;
+	}
+	
 }
 
 void AShooterWeapon::AttachMeshToPawn()
@@ -54,5 +62,61 @@ void AShooterWeapon::AttachMeshToPawn()
 			WeaponMesh1P->SetHiddenInGame(false);
 			WeaponMesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, attachPoint);
 		}
+	}
+}
+
+//获取子弹发射方向
+FVector AShooterWeapon::GetAdjustAim()
+{
+	FVector FinalAim = FVector::ZeroVector;
+	AShooterPlayerController* PlayerController = Instigator ? Cast<AShooterPlayerController>(Instigator->GetController()) : nullptr;
+	if (PlayerController)
+	{
+		FVector CameraLocation;
+		FRotator CameraRotation;
+		//GetPlayerViewPoint()获取眼睛位置，使用引用进行传值
+		PlayerController->GetPlayerViewPoint(CameraLocation,CameraRotation);
+		FinalAim = CameraRotation.Vector();
+	}
+	return FinalAim;
+}
+
+void AShooterWeapon::FireWeapon() {}
+
+void AShooterWeapon::StartFire()
+{
+	SimulateWeaponFire();
+	FireWeapon();
+}
+
+void AShooterWeapon::SimulateWeaponFire()
+{
+	if (FireSound)
+	{
+		PlayWeaponSound(FireSound);
+	}
+}
+
+UAudioComponent* AShooterWeapon::PlayWeaponSound(USoundCue *Sound)
+{
+	UAudioComponent* AudioComp = nullptr;
+	if (Sound)
+	{
+		//声音跟随父组件播放
+		AudioComp = UGameplayStatics::SpawnSoundAttached(Sound, PawnOwner->GetRootComponent());
+	}
+	return AudioComp;
+}
+
+
+FVector AShooterWeapon::GetMuzzleLocation()
+{
+	if (WeaponMesh1P)
+	{
+		return WeaponMesh1P->GetSocketLocation(MuzzleAttachPoint);
+	}
+	else
+	{
+		return FVector();
 	}
 }
