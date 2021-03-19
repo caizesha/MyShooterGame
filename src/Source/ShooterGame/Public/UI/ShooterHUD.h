@@ -8,12 +8,31 @@
 /**
  * 
  */
+
+enum EShooterCrossHairDirection
+{
+	Left,
+	Right,
+	Center,
+	Top,
+	Bottom
+};
+
 UCLASS()
 class SHOOTERGAME_API AShooterHUD : public AHUD
 {
 	GENERATED_BODY()
 	
-	
-	
+public:
+	AShooterHUD();
+
+	virtual void DrawHUD() override;
+
+	void DrawCrosshair();
+	//ÊµÏÖ×¼ÐÇ
+	UPROPERTY()
+	FCanvasIcon Crosshair[5];
+
+	float ScaleUI;
 	
 };

@@ -28,14 +28,15 @@ AShooterCharacter::AShooterCharacter()
 
 
 	//创建相机并挂载到根组件上,固定其相对位置，由pawn控制相机的旋转
-	FPCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PawnCamera1p"));
+	/*FPCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PawnCamera1p"));
 	FPCamera->SetupAttachment(GetCapsuleComponent());
 	FPCamera->SetRelativeLocation(FVector(0.0f, 0.0f, BaseEyeHeight));
 	FPCamera->bUsePawnControlRotation = true;
-
+	*/
 	//创建手臂组件，并进行设置
 	FPArm = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PawnArm1p"));
-	FPArm->SetupAttachment(FPCamera);
+	FPArm->SetupAttachment(GetCapsuleComponent());
+	//FPArm->SetupAttachment(FPCamera);
 	FPArm->bOnlyOwnerSee = true;
 	FPArm->bOwnerNoSee = false;
 	FPArm->bReceivesDecals = false;
@@ -49,7 +50,7 @@ AShooterCharacter::AShooterCharacter()
 	FPArm->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	FPArm->SetCollisionResponseToAllChannels(ECR_Ignore);
 	//设置相对位置
-	FPArm->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f - 86.0f - BaseEyeHeight));
+	//FPArm->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f - 86.0f - BaseEyeHeight));
 
 	//设置默认瞄准关闭
 	bIsTargeting = false;
@@ -101,6 +102,32 @@ void AShooterCharacter::PostInitializeComponents()
 		CurrentWeapon->SetPawnOwner(this);
 		CurrentWeapon->AttachMeshToPawn();
 	}
+}
+
+void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
+{
+	USkeletalMeshComponent* DefaultMesh1P = Cast<USkeletalMeshComponent>(GetClass()->GetDefaultSubobjectByName(TEXT("PawnArm1p")));
+	//构造第一人称Mesh相对于根组件的矩阵
+	const FMatrix DefaultMeshLS = FRotationTranslationMatrix(DefaultMesh1P->RelativeRotation, DefaultMesh1P->RelativeLocation);
+	//获取根组件到世界空间的变换矩阵
+	const FMatrix LocalToWorld = ActorToWorld().ToMatrixWithScale();
+
+	const FRotator RootCameraYaw(0.0f, CameraRotation.Yaw, 0.0f);
+	const FRotator RootCameraPitch(CameraRotation.Pitch, 0.0f, 0.0f);
+
+	//计算相机相对于根组件只带Yaw的矩阵
+	const FMatrix LeveledCameraLS = FRotationTranslationMatrix(RootCameraYaw, CameraLocation) * LocalToWorld.Inverse();
+	//计算相机相对于根组件带pitch和yaw的矩阵
+	const FMatrix PitchedCameraLS = FRotationMatrix(RootCameraPitch) * LeveledCameraLS;
+
+	//计算第一人称手臂相对于相机的矩阵
+	const FMatrix MeshRelativeToCamera = DefaultMeshLS * LeveledCameraLS.Inverse();
+	
+	//计算第一人称手臂相对于根组件的矩阵
+	const FMatrix PitchedMesh = MeshRelativeToCamera * PitchedCameraLS;
+
+	//设置手臂相对于根组件的位置以及旋转设置
+	FPArm->SetRelativeLocationAndRotation(PitchedMesh.GetOrigin(),PitchedMesh.Rotator());
 }
 
 void AShooterCharacter::MoveForward(float value)

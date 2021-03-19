@@ -2,7 +2,16 @@
 
 #include "ShooterGame.h"
 #include "ShooterPlayerCameraManager.h"
+#include "ShooterCharacter.h"
 
+void AShooterPlayerCameraManager::UpdateCamera(float DeltaTime)
+{
+	Super::UpdateCamera(DeltaTime);
+	AShooterCharacter* MyPawn = Cast<AShooterCharacter>(PCOwner ? PCOwner->GetPawn() : nullptr);
+	if (MyPawn)
+	{
+		MyPawn->OnCameraUpdate(GetCameraLocation(),GetCameraRotation());
+	}
 
-
+}
 

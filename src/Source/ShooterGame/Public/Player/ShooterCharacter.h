@@ -29,6 +29,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void PostInitializeComponents() override;
+
+	void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation);
 	//process character's move
 	void MoveForward(float value);
 
@@ -58,8 +60,8 @@ public:
 
 protected:
 	//创建蓝图可编辑的相机组件
-	UPROPERTY(EditAnyWhere, Category = "Camera")
-	UCameraComponent *FPCamera;
+	//UPROPERTY(EditAnyWhere, Category = "Camera")
+	//UCameraComponent *FPCamera;
 
 	//加入第一人称手臂Mesh
 	UPROPERTY(EditAnyWhere, Category = "Mesh")
