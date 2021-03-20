@@ -58,6 +58,10 @@ public:
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
+	float GetCurrentHealth();
+
+	AShooterWeapon* GetCurrentWeapon();
+
 protected:
 	//创建蓝图可编辑的相机组件
 	//UPROPERTY(EditAnyWhere, Category = "Camera")

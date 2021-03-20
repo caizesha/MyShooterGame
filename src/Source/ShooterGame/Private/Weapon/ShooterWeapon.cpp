@@ -4,6 +4,7 @@
 #include "ShooterWeapon.h"
 #include "ShooterCharacter.h"
 #include "ShooterPlayerController.h"
+#include "ShooterAIController.h"
 
 
 // Sets default values
@@ -69,14 +70,28 @@ void AShooterWeapon::AttachMeshToPawn()
 FVector AShooterWeapon::GetAdjustAim()
 {
 	FVector FinalAim = FVector::ZeroVector;
+	
 	AShooterPlayerController* PlayerController = Instigator ? Cast<AShooterPlayerController>(Instigator->GetController()) : nullptr;
 	if (PlayerController)
-	{
+	{	
 		FVector CameraLocation;
 		FRotator CameraRotation;
+
 		//GetPlayerViewPoint()获取眼睛位置，使用引用进行传值
 		PlayerController->GetPlayerViewPoint(CameraLocation,CameraRotation);
 		FinalAim = CameraRotation.Vector();
+	}
+	else if (Instigator)
+	{
+		AShooterAIController* AIController = PawnOwner ? Cast<AShooterAIController>(PawnOwner->GetController()) : nullptr;
+		if (AIController)
+		{
+			FinalAim = AIController->GetControlRotation().Vector();
+		}
+		else
+		{
+			FinalAim = Instigator->GetBaseAimRotation().Vector();
+		}
 	}
 	return FinalAim;
 }

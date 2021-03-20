@@ -8,6 +8,7 @@
 #include "ShooterGameState.h"
 #include "ShooterSpectatorPawn.h"
 #include "ShooterHUD.h"
+#include "ShooterAIController.h"
 
 AShooterGameMode::AShooterGameMode()
 {
@@ -15,6 +16,11 @@ AShooterGameMode::AShooterGameMode()
 	static ConstructorHelpers::FClassFinder<AShooterCharacter> PlayerPawnOb(TEXT("/Game/Blueprints/Pawns/PlayerPawn"));
 	//赋值playerpawn的反射信息类对象
 	DefaultPawnClass = PlayerPawnOb.Class;
+	
+	//赋值botpawn的反射信息类对象
+	static ConstructorHelpers::FClassFinder<AShooterCharacter> BotPawnOb(TEXT("/Game/Blueprints/Pawns/BotPawn"));
+	BotPawnClass = BotPawnOb.Class;
+
 	//创建玩家控制器类的反射信息
 	PlayerControllerClass = AShooterPlayerController::StaticClass();
 	//创建玩家状态类的反射信息
@@ -25,6 +31,48 @@ AShooterGameMode::AShooterGameMode()
 	SpectatorClass = AShooterSpectatorPawn::StaticClass();
 	//创建交显面板类的反射信息
 	HUDClass = AShooterHUD::StaticClass();
+
+
 }
 
+void AShooterGameMode::StartPlay()
+{
+	Super::StartPlay();
 
+	CreateBotController();
+
+	AddBots();
+}
+
+AShooterAIController* AShooterGameMode::CreateBotController()
+{
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.Instigator = nullptr;
+	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnInfo.OverrideLevel = nullptr;
+
+	AShooterAIController* AIController = GetWorld()->SpawnActor<AShooterAIController>(SpawnInfo);
+	return AIController;
+}
+
+void AShooterGameMode::AddBots()
+{
+	UWorld* world = GetWorld();
+	for (FConstControllerIterator It = world->GetControllerIterator(); It; It++)
+	{
+		AShooterAIController* AIC = Cast<AShooterAIController>(*It);
+		if(AIC)
+		{
+			RestartPlayer(AIC);
+		}
+	}
+}
+
+UClass* AShooterGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	if (InController->IsA<AShooterAIController>())
+	{
+		return BotPawnClass;
+	}
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
+}

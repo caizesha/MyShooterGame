@@ -206,7 +206,7 @@ void AShooterCharacter::OnStartFire()
 
 void AShooterCharacter::OnStopFire()
 {
-
+	//todo
 }
 
 float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -217,4 +217,12 @@ float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEve
 	}
 	return ActualDamage;
 }
+float AShooterCharacter::GetCurrentHealth()
+{
+	return Health;
+}
 
+AShooterWeapon* AShooterCharacter::GetCurrentWeapon()
+{
+	return CurrentWeapon;
+}
