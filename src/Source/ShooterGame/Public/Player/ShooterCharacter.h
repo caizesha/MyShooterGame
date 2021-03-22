@@ -58,7 +58,9 @@ public:
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
-	float GetCurrentHealth();
+	int32 GetCurrentHealth() const;
+
+	int32 GetMaxHealth() const;
 
 	AShooterWeapon* GetCurrentWeapon();
 

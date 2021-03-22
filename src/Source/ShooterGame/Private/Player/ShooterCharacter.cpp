@@ -217,9 +217,14 @@ float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEve
 	}
 	return ActualDamage;
 }
-float AShooterCharacter::GetCurrentHealth()
+int32 AShooterCharacter::GetCurrentHealth() const
 {
 	return Health;
+}
+
+int32 AShooterCharacter::GetMaxHealth() const
+{
+	return GetClass()->GetDefaultObject<AShooterCharacter>()->Health;
 }
 
 AShooterWeapon* AShooterCharacter::GetCurrentWeapon()

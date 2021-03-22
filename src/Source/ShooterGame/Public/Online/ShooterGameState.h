@@ -12,8 +12,10 @@ UCLASS()
 class SHOOTERGAME_API AShooterGameState : public AGameState
 {
 	GENERATED_BODY()
-	
-	
+
+public:
+	UPROPERTY(Transient)
+	int32 RemainingTime;
 	
 	
 };

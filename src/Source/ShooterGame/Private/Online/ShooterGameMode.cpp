@@ -32,7 +32,6 @@ AShooterGameMode::AShooterGameMode()
 	//创建交显面板类的反射信息
 	HUDClass = AShooterHUD::StaticClass();
 
-
 }
 
 void AShooterGameMode::StartPlay()
@@ -75,4 +74,35 @@ UClass* AShooterGameMode::GetDefaultPawnClassForController_Implementation(AContr
 		return BotPawnClass;
 	}
 	return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
+void AShooterGameMode::DeafultTimer()
+{
+	//实现倒数计时器
+	AShooterGameState* ShooterGameState = Cast<AShooterGameState>(GameState);
+	if (ShooterGameState && (ShooterGameState->RemainingTime) > 0)
+	{
+		ShooterGameState->RemainingTime--;
+		if (ShooterGameState->RemainingTime <= 0)
+		{
+			RestartGame();
+		}
+	}
+	
+}
+
+void AShooterGameMode::PreInitializeComponents()
+{
+	Super::PreInitializeComponents();
+
+	//设置倒数定时器
+	GetWorldTimerManager().SetTimer(TimeHandle_DefaultTimer, this, &AShooterGameMode::DeafultTimer, 1.0f, true);
+}
+
+void AShooterGameMode::HandleMatchHasStarted()
+{
+	//配置游戏剩余时间
+	Super::HandleMatchHasStarted();
+	AShooterGameState* ShooterGameState = Cast<AShooterGameState>(GameState);
+	ShooterGameState->RemainingTime = RoundTime;
 }

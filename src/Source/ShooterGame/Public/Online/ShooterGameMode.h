@@ -27,4 +27,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameMode")
 	TSubclassOf<APawn> BotPawnClass;
+
+	void DeafultTimer();
+
+	virtual void PreInitializeComponents() override;
+
+	virtual void HandleMatchHasStarted() override;
+protected:
+	FTimerHandle TimeHandle_DefaultTimer;
+
+	UPROPERTY(config)
+	int32 RoundTime;
+
 };
