@@ -135,3 +135,14 @@ FVector AShooterWeapon::GetMuzzleLocation()
 		return FVector();
 	}
 }
+
+int AShooterWeapon::GetCurrentAmmoCount()
+{
+	return CurrentAmmoCount;
+}
+
+
+int AShooterWeapon::GetMaxAmmoCount()
+{
+	return GetClass()->GetDefaultObject<AShooterWeapon>()->CurrentAmmoCount;
+}

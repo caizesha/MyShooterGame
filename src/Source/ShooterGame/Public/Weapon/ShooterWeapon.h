@@ -39,6 +39,11 @@ public:
 	void SimulateWeaponFire();
 
 	UAudioComponent* PlayWeaponSound(USoundCue *Sound);
+	
+	int GetCurrentAmmoCount();
+
+	int GetMaxAmmoCount();
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* WeaponMesh1P;
@@ -48,7 +53,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue *FireSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	int CurrentAmmoCount;
 private:
 	AShooterCharacter* PawnOwner;
 	
+
 };

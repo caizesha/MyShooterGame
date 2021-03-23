@@ -25,6 +25,7 @@ void AShooterWeapon_Projectile::FireWeapon()
 		Projectile->InitializeVelocity(ShooterDirection);
 		UGameplayStatics::FinishSpawningActor(Projectile, SpawnTM);
 	}
+	CurrentAmmoCount--;
 }
 
 void AShooterWeapon_Projectile::ApplyWeaponConfig(FProjectileWeaponData& Data)
