@@ -202,6 +202,10 @@ void AShooterWeapon::DetermineWeaponState()
 			{
 				NewState = EWeaponState::Reloading;
 			}
+			else
+			{
+				NewState = CurrentState;
+			}
 		}
 		else
 		{
@@ -313,7 +317,7 @@ void AShooterWeapon::HandleStartReloadState()
 	}
 
 	GetWorldTimerManager().SetTimer(TimerHandle_StopReload, this, &AShooterWeapon::StopReload, AnimDuration, false);
-	GetWorldTimerManager().SetTimer(TimerHandle_ReloadWeapon, this, &AShooterWeapon::ReloadWeapon, FMath::Max(AnimDuration - 0.2f, 0.1f), false);
+	GetWorldTimerManager().SetTimer(TimerHandle_ReloadWeapon, this, &AShooterWeapon::ReloadWeapon, FMath::Max(AnimDuration - 0.1f, 0.1f), false);
 
 	if(PawnOwner)
 	{
@@ -326,12 +330,8 @@ void AShooterWeapon::HandleEndReloadState()
 {
 	//停止播放动画
 	//todo
-	if (bPendingReload)
-	{
-		bPendingReload = false;
-	}
 	GetWorldTimerManager().ClearTimer(TimerHandle_StopReload);
-	//GetWorldTimerManager().ClearTimer(TimerHandle_ReloadWeapon);
+	GetWorldTimerManager().ClearTimer(TimerHandle_ReloadWeapon);
 
 }
 
@@ -439,18 +439,17 @@ void AShooterWeapon::HandleFiring()
 	}
 	else
 	{
-		if (CurrentAmmoInClip <= 0 && CanReload())
-		{
-			StartReload();
-		}
-		else
-		{
-			SimulateWeaponFire();
-			FireWeapon();
-			//更新子弹数量
-			UsedAmmo();
-		}
+		SimulateWeaponFire();
+		FireWeapon();
+		//更新子弹数量
+		UsedAmmo();
 	}
+
+	if (CurrentAmmoInClip <= 0 && CanReload())
+	{
+		StartReload();
+	}
+	
 
 	bRefiring = (CurrentState == EWeaponState::Firing) && (WeaponConfig.TimeBetweenShots > 0.0f);
 	if (bRefiring)
