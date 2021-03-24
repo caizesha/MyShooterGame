@@ -198,27 +198,28 @@ void AShooterHUD::DrawWeaponHUD()
 
 		//绘制文字上半部分
 		float SizeX, SizeY;
-		FString Text = FString::FromInt(Weapon->GetCurrentAmmoCount());
+		FString Text = FString::FromInt(Weapon->GetCurrentAmmoInClip());
 		Canvas->StrLen(BigFont, Text, SizeX, SizeY);
 
 		const float TextOffset = 12;
 		const float TopTextScale = 0.73;
-		const float TopTextPosX = Canvas->ClipX - Canvas->OrgX - (2 * offset + PriWeaponBoxWidth + (BoxWidth + SizeX * TopTextScale) / 2) * ScaleUI;
-		const float TopTextPosY = Canvas->ClipY - Canvas->OrgY - (offset + PriWeaponOffsetY + (offset - TextOffset) / 2) * ScaleUI;
+		const float TopTextPosX = Canvas->ClipX - Canvas->OrgX - (2 * offset + PriWeaponBoxWidth + (BoxWidth + SizeX * TopTextScale) / 2.0f) * ScaleUI;
+		const float TopTextPosY = Canvas->ClipY - Canvas->OrgY - (offset + PriWeaponOffsetY + PrimaryWeaponBg.VL - TextOffset / 2.0f) * ScaleUI;
 
 		FCanvasTextItem TextItem(FVector2D::ZeroVector, FText::GetEmpty(), BigFont, HUDDark);
 		TextItem.EnableShadow (FLinearColor::Black);
+		TextItem.Text = FText::FromString(Text);
 		TextItem.Scale = FVector2D(TopTextScale*ScaleUI, TopTextScale*ScaleUI);
 		TextItem.FontRenderInfo = ShadowFont;
 		Canvas->DrawItem(TextItem, TopTextPosX, TopTextPosY);
 
 		//绘制文字下半部分
 		float TopTextHeight = SizeY * TopTextScale;
-		Text = FString::FromInt(Weapon->GetMaxAmmoCount());
+		Text = FString::FromInt(Weapon->GetCurrentAmmo() - Weapon->GetCurrentAmmoInClip());
 		Canvas->StrLen(BigFont, Text, SizeX, SizeY);
 
 		const float BottomTextScale = 0.49f;
-		const float BottomTextPosX = Canvas->ClipX - Canvas->OrgX - (2 * offset + PriWeaponBoxWidth + (BoxWidth + SizeX * BottomTextScale) / 2) * ScaleUI;
+		const float BottomTextPosX = Canvas->ClipX - Canvas->OrgX - (2 * offset + PriWeaponBoxWidth + (BoxWidth + SizeX * BottomTextScale) / 2.0f) * ScaleUI;
 		const float BottomTextPosY = TopTextPosY + (TopTextHeight - 0.8f*TextOffset) * ScaleUI;
 
 		TextItem.Text = FText::FromString(Text);
@@ -230,14 +231,14 @@ void AShooterHUD::DrawWeaponHUD()
 		//绘制子弹进度条
 		//
 
-		const float AmmoPerIcon = Weapon->GetMaxAmmoCount() / AmmoIconCount;
+		const float AmmoPerIcon = Weapon->GetAmmoPerClip() / AmmoIconCount;
 		//分别绘制每一个弹夹
 		for (int32 i = 0; i < AmmoIconCount; i++)
 		{
 			
-			if ((i + 1)*AmmoPerIcon > Weapon->GetCurrentAmmoCount())
+			if ((i + 1)*AmmoPerIcon > Weapon->GetCurrentAmmoInClip())
 			{
-				const float UsedPercentAmmo = AmmoPerIcon * (i + 1) - Weapon->GetCurrentAmmoCount();
+				const float UsedPercentAmmo = AmmoPerIcon * (i + 1) - Weapon->GetCurrentAmmoInClip();
 				float PercentLeftInICon = 0;
 				if(UsedPercentAmmo<AmmoPerIcon)
 				{

@@ -64,6 +64,12 @@ public:
 
 	AShooterWeapon* GetCurrentWeapon();
 
+	bool CanFire() const;
+
+	bool IsAlive() const;
+
+	void OnReload();
+
 protected:
 	//创建蓝图可编辑的相机组件
 	//UPROPERTY(EditAnyWhere, Category = "Camera")

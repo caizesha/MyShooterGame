@@ -6,6 +6,12 @@
 
 void AShooterWeapon_Projectile::FireWeapon()
 {
+	/*if (CurrentAmmoCount <= 0)
+	{
+		return;
+	}
+	CurrentAmmoCount--;*/
+
 	//获取子弹发射方向
 	FVector ShooterDirection, MuzzleLocation;
 	ShooterDirection = GetAdjustAim();
@@ -25,7 +31,6 @@ void AShooterWeapon_Projectile::FireWeapon()
 		Projectile->InitializeVelocity(ShooterDirection);
 		UGameplayStatics::FinishSpawningActor(Projectile, SpawnTM);
 	}
-	CurrentAmmoCount--;
 }
 
 void AShooterWeapon_Projectile::ApplyWeaponConfig(FProjectileWeaponData& Data)

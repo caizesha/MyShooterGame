@@ -87,6 +87,9 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &AShooterCharacter::OnStartFire);
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &AShooterCharacter::OnStopFire);
+
+	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &AShooterCharacter::OnReload);
+
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -100,7 +103,8 @@ void AShooterCharacter::PostInitializeComponents()
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->SetPawnOwner(this);
-		CurrentWeapon->AttachMeshToPawn();
+		//CurrentWeapon->AttachMeshToPawn();
+		CurrentWeapon->StartEquip(nullptr);
 	}
 }
 
@@ -206,7 +210,8 @@ void AShooterCharacter::OnStartFire()
 
 void AShooterCharacter::OnStopFire()
 {
-	//todo
+	CurrentWeapon->StopFire();
+
 }
 
 float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -230,4 +235,27 @@ int32 AShooterCharacter::GetMaxHealth() const
 AShooterWeapon* AShooterCharacter::GetCurrentWeapon()
 {
 	return CurrentWeapon;
+}
+
+bool AShooterCharacter::CanFire() const
+{ 
+	bool CanFire = IsAlive();
+	return CanFire;
+}
+
+bool AShooterCharacter::IsAlive() const
+{
+	return Health > 0;
+}
+
+void AShooterCharacter::OnReload()
+{
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	if (MyPC)
+	{
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->StartReload();
+		}
+	}
 }

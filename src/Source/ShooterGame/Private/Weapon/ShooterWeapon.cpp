@@ -25,13 +25,32 @@ AShooterWeapon::AShooterWeapon()
 	WeaponMesh1P->SetRelativeTransform(newTransform);
 
 	FireSound = nullptr;
+	//CurrentAmmoCount = 0;
+
+	PreState = EWeaponState::Idle;
+	CurrentState = EWeaponState::Idle;
+	bIsEquiped = false;
+	bPendingReload = false;
+	bWantToFire = false;
+	bPendingEquip = false;
+	bRefiring = false;
+
+	LastWeapon = nullptr;
+
+	CurrentAmmo = 0;
+	CurrentAmmoInClip = 0;
 }
 
 // Called when the game starts or when spawned
 void AShooterWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	//CurrentAmmoCount = GetMaxAmmoCount();
+	if (WeaponConfig.InitialClips > 0)
+	{
+		CurrentAmmo = WeaponConfig.InitialClips * WeaponConfig.AmmoPerClip;
+		CurrentAmmoInClip = WeaponConfig.AmmoPerClip;
+	}
 }
 
 // Called every frame
@@ -100,16 +119,39 @@ void AShooterWeapon::FireWeapon() {}
 
 void AShooterWeapon::StartFire()
 {
-	SimulateWeaponFire();
-	FireWeapon();
+	if (!bWantToFire)
+	{
+		bWantToFire = true;
+		DetermineWeaponState();
+		HandleDependCurrentState();
+	}
+	//SimulateWeaponFire();
+	//FireWeapon();
+}
+
+void AShooterWeapon::StopFire()
+{
+	if (bWantToFire)
+	{
+		bWantToFire = false;
+		DetermineWeaponState();
+		HandleDependCurrentState();
+	}
 }
 
 void AShooterWeapon::SimulateWeaponFire()
 {
+	//播放开火动画
+	//todo
 	if (FireSound)
 	{
 		PlayWeaponSound(FireSound);
 	}
+}
+
+void AShooterWeapon::StopSimulateWeaponFire()
+{
+	//todo
 }
 
 UAudioComponent* AShooterWeapon::PlayWeaponSound(USoundCue *Sound)
@@ -135,14 +177,307 @@ FVector AShooterWeapon::GetMuzzleLocation()
 		return FVector();
 	}
 }
+//
+//int AShooterWeapon::GetCurrentAmmoCount()
+//{
+//	return CurrentAmmoCount;
+//}
+//
+//
+//int AShooterWeapon::GetMaxAmmoCount()
+//{
+//	return GetClass()->GetDefaultObject<AShooterWeapon>()->CurrentAmmoCount;
+//}
 
-int AShooterWeapon::GetCurrentAmmoCount()
+//确定武器所处状态
+void AShooterWeapon::DetermineWeaponState()
 {
-	return CurrentAmmoCount;
+	EWeaponState::Type NewState = EWeaponState::Idle;
+
+	if (bIsEquiped)
+	{
+		if (bPendingReload)
+		{
+			if (CanReload())
+			{
+				NewState = EWeaponState::Reloading;
+			}
+		}
+		else
+		{
+			if (bWantToFire && CanFire())
+			{
+				NewState = EWeaponState::Firing;
+			}
+			else
+			{
+				NewState = EWeaponState::Idle;
+			}
+		}
+		/*
+		//觉得应该加上的地方
+		if (bPendingEquip)
+		{
+			NewState = EWeaponState::Equiping;
+		}*/
+	}
+	else
+	{
+		if (bPendingEquip)
+		{
+			NewState = EWeaponState::Equiping;
+		}
+	}
+	SetWeaponState(NewState);
 }
 
-
-int AShooterWeapon::GetMaxAmmoCount()
+bool AShooterWeapon::CanFire() const
 {
-	return GetClass()->GetDefaultObject<AShooterWeapon>()->CurrentAmmoCount;
+	bool bCanFire = PawnOwner && PawnOwner->CanFire();
+	return true;
+}
+
+bool AShooterWeapon::CanReload() const
+{
+	bool bGotAmmo = (CurrentAmmoInClip < WeaponConfig.AmmoPerClip) && (CurrentAmmo - CurrentAmmoInClip > 0);
+	bool bStateOKToReload = (CurrentState == EWeaponState::Idle) || (CurrentState == EWeaponState::Firing);
+	
+	return bGotAmmo && bStateOKToReload;
+}
+
+void AShooterWeapon::SetWeaponState(EWeaponState::Type NewState)
+{
+	PreState = CurrentState;
+	CurrentState = NewState;
+}
+
+//处理状态转换过程
+void AShooterWeapon::HandleDependCurrentState()
+{
+	if (PreState == EWeaponState::Idle&& CurrentState == EWeaponState::Firing)
+	{
+		//处理开始开火状态
+		HandleStartFireState();
+	}
+	else if (PreState == EWeaponState::Firing && (CurrentState == EWeaponState::Idle || CurrentState == EWeaponState::Reloading))
+	{
+		//处理结束开火状态
+		HandleEndFireState();
+	}
+
+	if ((PreState == EWeaponState::Firing || PreState == EWeaponState::Idle)&&  CurrentState == EWeaponState::Reloading)
+	{
+		//处理开始装弹状态
+		HandleStartReloadState();
+	}
+	else if (PreState == EWeaponState::Reloading && CurrentState == EWeaponState::Idle)
+	{
+		//处理结束装弹状态
+		HandleEndReloadState();
+	}
+
+	if (PreState == EWeaponState::Idle && CurrentState == EWeaponState::Equiping)
+	{
+		//处理开始换枪状态
+		HandleStartEquipState();
+	}
+	else if (PreState == EWeaponState::Equiping && CurrentState == EWeaponState::Idle)
+	{
+		//处理结束换枪状态
+		HandleEndEquipState();
+	}
+}
+
+void AShooterWeapon::HandleStartFireState()
+{
+	HandleFiring();
+}
+
+void AShooterWeapon::HandleEndFireState()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_HandleFiring);
+	bRefiring = false;
+
+	//停止开火动画
+	StopSimulateWeaponFire();
+}
+
+void AShooterWeapon::HandleStartReloadState()
+{
+	//播放装弹动画
+	//todo
+	float AnimDuration = 0.0f;
+	if (AnimDuration <= 0.0f)
+	{
+		AnimDuration = 0.5;
+	}
+
+	GetWorldTimerManager().SetTimer(TimerHandle_StopReload, this, &AShooterWeapon::StopReload, AnimDuration, false);
+	GetWorldTimerManager().SetTimer(TimerHandle_ReloadWeapon, this, &AShooterWeapon::ReloadWeapon, FMath::Max(AnimDuration - 0.2f, 0.1f), false);
+
+	if(PawnOwner)
+	{
+		PlayWeaponSound(ReloadSound);
+	}
+
+}
+
+void AShooterWeapon::HandleEndReloadState()
+{
+	//停止播放动画
+	//todo
+	if (bPendingReload)
+	{
+		bPendingReload = false;
+	}
+	GetWorldTimerManager().ClearTimer(TimerHandle_StopReload);
+	//GetWorldTimerManager().ClearTimer(TimerHandle_ReloadWeapon);
+
+}
+
+void AShooterWeapon::HandleStartEquipState()
+{
+	AttachMeshToPawn();
+
+	if (LastWeapon != nullptr)
+	{
+		float Duration = 2.0f;
+
+		//播放换枪动画
+		//todo
+		GetWorldTimerManager().SetTimer(TimerHandle_StopEquip, this, &AShooterWeapon::StopEquip, Duration, false);
+
+	}
+
+	
+	//角色刚创建
+	else
+	{
+		StopEquip();
+	}
+
+	if (PawnOwner && EquipSound)
+	{
+		PlayWeaponSound(EquipSound);
+	}
+
+	bIsEquiped = true;
+}
+
+void AShooterWeapon::HandleEndEquipState()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_StopEquip);
+	
+	//停止武器动画播放
+	//todo
+}
+
+void AShooterWeapon::StartEquip(const AShooterWeapon* _LastWeapon)
+{
+	LastWeapon = (AShooterWeapon*)_LastWeapon;
+	if (!bPendingEquip)
+	{
+		bPendingEquip = true;
+		DetermineWeaponState();
+		HandleDependCurrentState();
+	}
+}
+
+void AShooterWeapon::StopEquip()
+{
+	if (!bIsEquiped)
+	{
+		bIsEquiped = true;
+	}
+	
+	if (bPendingEquip)
+	{
+		bPendingEquip = false;
+	}
+
+	DetermineWeaponState();
+	HandleDependCurrentState();
+}
+
+void AShooterWeapon::StartReload()
+{
+	if (!bPendingReload && CanReload())
+	{
+		bPendingReload = true;
+		DetermineWeaponState();
+		HandleDependCurrentState();
+	}
+}
+
+void AShooterWeapon::StopReload()
+{
+	if (bPendingReload)
+	{
+		bPendingReload = false;
+		DetermineWeaponState();
+		HandleDependCurrentState();
+	}
+}
+
+void AShooterWeapon::ReloadWeapon()
+{
+	int32 ClipDelta = FMath::Min(WeaponConfig.AmmoPerClip - CurrentAmmoInClip, CurrentAmmo - CurrentAmmoInClip);
+	if (ClipDelta > 0)
+	{
+		CurrentAmmoInClip += ClipDelta;
+	}
+	//currentammo应该没有变化，不用这么写吧？？？
+	//CurrentAmmo = FMath::Max(CurrentAmmo, CurrentAmmoInClip);
+}
+
+void AShooterWeapon::HandleFiring()
+{
+	if (CurrentAmmo <= 0)
+	{
+		//todo:提示子弹数量不够
+		return;
+	}
+	else
+	{
+		if (CurrentAmmoInClip <= 0 && CanReload())
+		{
+			StartReload();
+		}
+		else
+		{
+			SimulateWeaponFire();
+			FireWeapon();
+			//更新子弹数量
+			UsedAmmo();
+		}
+	}
+
+	bRefiring = (CurrentState == EWeaponState::Firing) && (WeaponConfig.TimeBetweenShots > 0.0f);
+	if (bRefiring)
+	{
+		GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &AShooterWeapon::HandleFiring, WeaponConfig.TimeBetweenShots, false);
+
+	}
+
+}
+
+int32 AShooterWeapon::GetCurrentAmmo() const
+{
+	return CurrentAmmo;
+}
+
+int32 AShooterWeapon::GetCurrentAmmoInClip() const
+{
+	return CurrentAmmoInClip;
+}
+
+int32 AShooterWeapon::GetAmmoPerClip() const
+{
+	return WeaponConfig.AmmoPerClip;
+}
+
+void AShooterWeapon::UsedAmmo()
+{
+	CurrentAmmo--;
+	CurrentAmmoInClip--;
 }
