@@ -480,3 +480,17 @@ void AShooterWeapon::UsedAmmo()
 	CurrentAmmo--;
 	CurrentAmmoInClip--;
 }
+
+FHitResult AShooterWeapon::WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const
+{
+	static FName WeaponFireTag = FName(TEXT("WeaponTrace"));
+
+	FCollisionQueryParams TraceParams(WeaponFireTag, true, Instigator);
+	TraceParams.bTraceAsyncScene = true;
+	TraceParams.bReturnPhysicalMaterial = true;
+
+	FHitResult Hit(ForceInit);
+	GetWorld()->LineTraceSingleByChannel(Hit, TraceFrom, TraceTo, COLLISION_WEAPON, TraceParams);
+
+	return Hit;
+}

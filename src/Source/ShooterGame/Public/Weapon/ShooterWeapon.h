@@ -122,6 +122,8 @@ public:
 	int32 GetAmmoPerClip() const;
 
 	void UsedAmmo();
+
+	FHitResult WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const;
 protected:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* WeaponMesh1P;
@@ -153,9 +155,9 @@ protected:
 	//当前弹夹子弹数量
 	UPROPERTY(Transient)
 	int32 CurrentAmmoInClip;
-private:
-	AShooterCharacter* PawnOwner;
 	
+	AShooterCharacter* PawnOwner;
+private:
 	
 	bool bIsEquiped;
 	//是否需要装子弹

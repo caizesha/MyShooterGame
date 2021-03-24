@@ -56,6 +56,7 @@ void AShooterProjectile::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	//使用系统函数，在子弹停止时生成爆炸特效
 	MovementComp->OnProjectileStop.AddDynamic(this, &AShooterProjectile::OnImpact);
 	CollisionComp->MoveIgnoreActors.Add(Instigator);
 
@@ -80,6 +81,7 @@ void AShooterProjectile::Explode(const FHitResult& ImpactResult)
 		ParticleComp->Deactivate();
 	}
 
+	//在法线前10个单位处爆炸
 	const FVector NudgedImpactLocation = ImpactResult.ImpactPoint + ImpactResult.ImpactNormal * 10.0f;
 	if (WeaponConfig.ExplosionDamage > 0.0 && WeaponConfig.ExplosionRadius > 0.0)
 	{
