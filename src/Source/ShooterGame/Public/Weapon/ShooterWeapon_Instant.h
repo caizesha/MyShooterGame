@@ -44,7 +44,7 @@ protected:
 	FName TrailTargetParam;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubClassOf<class AShooterImpactEffect> ImpactTemplate;
+	TSubclassOf<class AShooterImpactEffect> ImpactTemplate;
 	
 public:
 	void FireWeapon();
