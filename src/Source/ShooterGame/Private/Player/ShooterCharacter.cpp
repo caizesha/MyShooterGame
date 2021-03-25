@@ -90,22 +90,15 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &AShooterCharacter::OnReload);
 
+	PlayerInputComponent->BindAction(TEXT("SwitchWeapon"), IE_Pressed, this, &AShooterCharacter::OnNextWeapon);
+
 }
 
 void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	FActorSpawnParameters SpawnInfo;
-	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	CurrentWeapon = GetWorld()->SpawnActor<AShooterWeapon>(ShooterWeaponClass, SpawnInfo);
-
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetPawnOwner(this);
-		//CurrentWeapon->AttachMeshToPawn();
-		CurrentWeapon->StartEquip(nullptr);
-	}
+	SpawnDefaultInventory();
 }
 
 void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
@@ -157,7 +150,7 @@ void AShooterCharacter::MoveRight(float value)
 	}
 }
 
-USkeletalMeshComponent* AShooterCharacter::GetFirstPersonMesh()
+USkeletalMeshComponent* AShooterCharacter::GetArmMesh()
 {
 	return FPArm;
 }
@@ -258,4 +251,115 @@ void AShooterCharacter::OnReload()
 			CurrentWeapon->StartReload();
 		}
 	}
+}
+
+void AShooterCharacter::SpawnDefaultInventory()
+{
+	int32 NumWeaponClasses = DefaultInventoryClass.Num();
+	for (int i = 0; i < NumWeaponClasses; i++)
+	{
+		if (DefaultInventoryClass[i])
+		{
+			FActorSpawnParameters SpawnInfo;
+			//不管情况都生成武器对象
+			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			AShooterWeapon* NewWeapon= GetWorld()->SpawnActor<AShooterWeapon>(DefaultInventoryClass[i],SpawnInfo);
+			if (NewWeapon)
+			{
+				AddWeaponObject(NewWeapon);
+			}
+			
+		}
+	}
+	
+	//设置第一把武器为默认武器
+	if (Inventory.Num() > 0)
+	{
+		CurrentWeapon = Inventory[0];
+		CurrentWeapon->OnEquip(nullptr);
+	}
+}
+
+void AShooterCharacter::AddWeaponObject(AShooterWeapon* weapon)
+{
+	if (weapon)
+	{
+		weapon->SetPawnOwner(this);
+		Inventory.AddUnique(weapon);
+	}
+}
+
+void AShooterCharacter::OnNextWeapon()
+{
+	//确保不是机器人
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	if (MyPC)
+	{
+		//确保上一个装备动作还没完成
+		if (Inventory.Num() > 0 && (CurrentWeapon->GetCurrentWeaponState() != EWeaponState::Equiping))
+		{
+			const int32 CurrentWeaponIndex = Inventory.IndexOfByKey(CurrentWeapon);
+			const int32 NextWeaponIndex = (CurrentWeaponIndex+1) % Inventory.Num();
+			AShooterWeapon* NewWeapon = Inventory[NextWeaponIndex];
+			EquipWeapon(NewWeapon);
+		}
+	}
+}
+
+void AShooterCharacter::EquipWeapon(AShooterWeapon* weapon)
+{
+	if (weapon)
+	{
+		SetCurrentWeapon(weapon, CurrentWeapon);
+	}
+}
+
+void AShooterCharacter::SetCurrentWeapon(AShooterWeapon* NewWeapon, AShooterWeapon* LastWeapon)
+{
+	//mesh摘除、状态归零
+	AShooterWeapon* LocalLastWeapon = nullptr;
+	if (LastWeapon != nullptr)
+	{
+		LocalLastWeapon = LastWeapon;
+	}
+	else if(NewWeapon!= CurrentWeapon)
+	{
+		LocalLastWeapon = CurrentWeapon;
+	}
+
+	if (LocalLastWeapon)
+	{
+		//卸载武器
+		LocalLastWeapon->OnUnEquip();
+	}
+	CurrentWeapon = NewWeapon;
+	if (NewWeapon)
+	{
+		NewWeapon->SetPawnOwner(this); 
+		NewWeapon->OnEquip(LastWeapon);
+	}
+}
+
+float AShooterCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
+{
+	USkeletalMeshComponent* UseMesh  = GetArmMesh();
+	if (UseMesh && AnimMontage && UseMesh->AnimScriptInstance)
+	{
+		//获取蒙太奇动画播放时间
+		return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+
+void AShooterCharacter::StopAnimMontage(class UAnimMontage* AnimMontage)
+{
+	USkeletalMeshComponent* UseMesh = GetArmMesh();
+	if (UseMesh && AnimMontage && UseMesh->AnimScriptInstance)
+	{
+		return UseMesh->AnimScriptInstance->Montage_Stop(AnimMontage->BlendOut.GetBlendTime(), AnimMontage);
+	}
+
 }

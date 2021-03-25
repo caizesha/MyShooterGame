@@ -36,7 +36,7 @@ public:
 
 	void MoveRight(float value); 
 
-	USkeletalMeshComponent* GetFirstPersonMesh();
+	USkeletalMeshComponent* GetArmMesh();
 
 	FName GetWeaponAttachPoint() const;
 
@@ -70,7 +70,18 @@ public:
 
 	void OnReload();
 
+	void SpawnDefaultInventory();
+
+	void AddWeaponObject(AShooterWeapon* weapon);
+	
+	void OnNextWeapon();
+
+	//重写父类播放蒙太奇动画的接口
+	virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate=1.0f, FName StartSectionName = NAME_None) override;
+
+	virtual void StopAnimMontage(class UAnimMontage* AnimMontage) override;
 protected:
+
 	//创建蓝图可编辑的相机组件
 	//UPROPERTY(EditAnyWhere, Category = "Camera")
 	//UCameraComponent *FPCamera;
@@ -79,8 +90,14 @@ protected:
 	UPROPERTY(EditAnyWhere, Category = "Mesh")
 	USkeletalMeshComponent* FPArm;
 
-	UPROPERTY(EditAnyWhere, Category = "Weapon")
-	TSubclassOf<AShooterWeapon> ShooterWeaponClass;
+	//Inventory
+	//定义武器反射类型对象数组，暴露到编辑器配置
+	UPROPERTY(EditAnyWhere, Category = "Inventory")
+	TArray<TSubclassOf<AShooterWeapon>> DefaultInventoryClass;
+	//定义背包数组容器，存储武器对象
+	//程序运行时创建，是不需要存储的临时数据
+	UPROPERTY(Transient)
+	TArray<AShooterWeapon*> Inventory;
 
 	AShooterWeapon* CurrentWeapon;
 
@@ -91,4 +108,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float Health;
+
+	void EquipWeapon(AShooterWeapon* weapon);
+
+	void SetCurrentWeapon(AShooterWeapon* NewWeapon, AShooterWeapon* LastWeapon);
 };

@@ -39,6 +39,8 @@ AShooterWeapon::AShooterWeapon()
 
 	CurrentAmmo = 0;
 	CurrentAmmoInClip = 0;
+
+	bPlayingFireAnim = false;
 }
 
 // Called when the game starts or when spawned
@@ -75,7 +77,7 @@ void AShooterWeapon::AttachMeshToPawn()
 {
 	if (PawnOwner)
 	{
-		USkeletalMeshComponent* PawnMesh1p = PawnOwner->GetFirstPersonMesh();
+		USkeletalMeshComponent* PawnMesh1p = PawnOwner->GetArmMesh();
 		FName attachPoint = PawnOwner->GetWeaponAttachPoint();
 		if (PawnMesh1p)
 		{
@@ -85,6 +87,11 @@ void AShooterWeapon::AttachMeshToPawn()
 	}
 }
 
+void AShooterWeapon::DetachMeshFromPawn()
+{
+	WeaponMesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	WeaponMesh1P->SetHiddenInGame(true);
+}
 //获取子弹发射方向
 FVector AShooterWeapon::GetAdjustAim()
 {
@@ -142,7 +149,12 @@ void AShooterWeapon::StopFire()
 void AShooterWeapon::SimulateWeaponFire()
 {
 	//播放开火动画
-	//todo
+	if (!bPlayingFireAnim)
+	{
+		bPlayingFireAnim = true;
+		PlayMontageAnimation(FireAnim);
+	}
+
 	if (FireSound)
 	{
 		PlayWeaponSound(FireSound);
@@ -151,7 +163,12 @@ void AShooterWeapon::SimulateWeaponFire()
 
 void AShooterWeapon::StopSimulateWeaponFire()
 {
-	//todo
+	//停止开火动画
+	if (bPlayingFireAnim)
+	{
+		bPlayingFireAnim = false;
+		StopMontageAnimation(FireAnim);
+	}
 }
 
 UAudioComponent* AShooterWeapon::PlayWeaponSound(USoundCue *Sound)
@@ -219,7 +236,7 @@ void AShooterWeapon::DetermineWeaponState()
 			}
 		}
 		/*
-		//觉得应该加上的地方
+		//觉得应该加上的地方:不需要了，因为换装备的时候会把bPendingEquip置为false
 		if (bPendingEquip)
 		{
 			NewState = EWeaponState::Equiping;
@@ -309,8 +326,7 @@ void AShooterWeapon::HandleEndFireState()
 void AShooterWeapon::HandleStartReloadState()
 {
 	//播放装弹动画
-	//todo
-	float AnimDuration = 0.0f;
+	float AnimDuration = PlayMontageAnimation(ReloadAnim);
 	if (AnimDuration <= 0.0f)
 	{
 		AnimDuration = 0.5;
@@ -329,7 +345,7 @@ void AShooterWeapon::HandleStartReloadState()
 void AShooterWeapon::HandleEndReloadState()
 {
 	//停止播放动画
-	//todo
+	StopMontageAnimation(ReloadAnim);
 	GetWorldTimerManager().ClearTimer(TimerHandle_StopReload);
 	GetWorldTimerManager().ClearTimer(TimerHandle_ReloadWeapon);
 
@@ -340,12 +356,14 @@ void AShooterWeapon::HandleStartEquipState()
 	AttachMeshToPawn();
 
 	if (LastWeapon != nullptr)
-	{
-		float Duration = 2.0f;
-
+	{	
 		//播放换枪动画
-		//todo
-		GetWorldTimerManager().SetTimer(TimerHandle_StopEquip, this, &AShooterWeapon::StopEquip, Duration, false);
+		float Duration = PlayMontageAnimation(EquipAnim);
+		if (Duration <= 0.0f)
+		{
+			Duration = 0.5f;
+		}
+		GetWorldTimerManager().SetTimer(TimerHandle_OnEquipFinished, this, &AShooterWeapon::OnEquipFinished, Duration, false);
 
 	}
 
@@ -353,7 +371,7 @@ void AShooterWeapon::HandleStartEquipState()
 	//角色刚创建
 	else
 	{
-		StopEquip();
+		OnEquipFinished();
 	}
 
 	if (PawnOwner && EquipSound)
@@ -366,13 +384,13 @@ void AShooterWeapon::HandleStartEquipState()
 
 void AShooterWeapon::HandleEndEquipState()
 {
-	GetWorldTimerManager().ClearTimer(TimerHandle_StopEquip);
+	GetWorldTimerManager().ClearTimer(TimerHandle_OnEquipFinished);
 	
 	//停止武器动画播放
-	//todo
+	StopMontageAnimation(EquipAnim);
 }
 
-void AShooterWeapon::StartEquip(const AShooterWeapon* _LastWeapon)
+void AShooterWeapon::OnEquip(const AShooterWeapon* _LastWeapon)
 {
 	LastWeapon = (AShooterWeapon*)_LastWeapon;
 	if (!bPendingEquip)
@@ -383,7 +401,7 @@ void AShooterWeapon::StartEquip(const AShooterWeapon* _LastWeapon)
 	}
 }
 
-void AShooterWeapon::StopEquip()
+void AShooterWeapon::OnEquipFinished()
 {
 	if (!bIsEquiped)
 	{
@@ -493,4 +511,69 @@ FHitResult AShooterWeapon::WeaponTrace(const FVector& TraceFrom, const FVector& 
 	GetWorld()->LineTraceSingleByChannel(Hit, TraceFrom, TraceTo, COLLISION_WEAPON, TraceParams);
 
 	return Hit;
+}
+
+EWeaponState::Type AShooterWeapon::GetCurrentWeaponState() const
+{
+	return CurrentState;
+}
+
+void AShooterWeapon::OnUnEquip()
+{
+	//此函数不应纳入状态机流程管理（没有动作触发）
+
+	//卸载Mesh
+	DetachMeshFromPawn();
+
+	bIsEquiped = false;
+
+	StopFire();
+	
+	if (bPendingReload)
+	{
+		bPendingReload = false;
+
+		//停止播放装弹动画
+		StopMontageAnimation(ReloadAnim);
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_StopReload);
+		GetWorldTimerManager().ClearTimer(TimerHandle_ReloadWeapon);
+	}
+
+	if (bPendingEquip)
+	{
+		bPendingEquip = false;
+
+		//停止播放换枪动画
+		StopMontageAnimation(EquipAnim);
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_OnEquipFinished);
+	}
+	DetermineWeaponState();
+}
+
+float AShooterWeapon::PlayMontageAnimation(const FWeaponAnim& Animation)
+{
+	float Duration = 0.0f;
+	if (PawnOwner)
+	{
+		UAnimMontage*  UseAnim = Animation.Pawn1P;
+		if (UseAnim)
+		{
+			Duration = PawnOwner->PlayAnimMontage(UseAnim);
+		}
+	}
+	return Duration;
+}
+
+void AShooterWeapon::StopMontageAnimation(const FWeaponAnim& Animation)
+{
+	if(PawnOwner)
+	{
+		UAnimMontage*  UseAnim = Animation.Pawn1P;
+		if (UseAnim)
+		{
+			PawnOwner->StopAnimMontage(UseAnim);
+		}
+	}
 }

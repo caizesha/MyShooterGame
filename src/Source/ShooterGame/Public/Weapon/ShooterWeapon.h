@@ -41,6 +41,17 @@ struct FWeaponData
 	}
 };
 
+
+USTRUCT()
+struct FWeaponAnim 
+{
+	GENERATED_USTRUCT_BODY();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* Pawn1P;
+
+};
+
 UCLASS()
 class SHOOTERGAME_API AShooterWeapon : public AActor
 {
@@ -54,13 +65,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void StopEquip();
+	void OnEquipFinished();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void SetPawnOwner(AShooterCharacter* pawnOwner);
+	
 	void AttachMeshToPawn();
+
+	void DetachMeshFromPawn();
 
 	//获取子弹发射方向
 	FVector GetAdjustAim();
@@ -105,7 +119,9 @@ public:
 
 	void HandleEndEquipState();
 
-	void StartEquip(const AShooterWeapon* _LastWeapon);
+	void OnEquip(const AShooterWeapon* _LastWeapon);
+
+	void OnUnEquip();
 
 	void StartReload();
 
@@ -124,6 +140,12 @@ public:
 	void UsedAmmo();
 
 	FHitResult WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const;
+
+	EWeaponState::Type GetCurrentWeaponState() const;
+
+	float PlayMontageAnimation(const FWeaponAnim& Animation);
+
+	void StopMontageAnimation(const FWeaponAnim& Animation);
 protected:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* WeaponMesh1P;
@@ -143,7 +165,18 @@ protected:
 
 	//UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	//int CurrentAmmoCount;
+	
+	//添加蒙太奇动画资源
+	bool bPlayingFireAnim;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	FWeaponAnim FireAnim;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	FWeaponAnim ReloadAnim;
+		
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	FWeaponAnim EquipAnim;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	FWeaponData WeaponConfig;
@@ -172,7 +205,7 @@ private:
 
 	AShooterWeapon* LastWeapon;
 
-	FTimerHandle TimerHandle_StopEquip;
+	FTimerHandle TimerHandle_OnEquipFinished;
 
 	FTimerHandle TimerHandle_ReloadWeapon;
 
