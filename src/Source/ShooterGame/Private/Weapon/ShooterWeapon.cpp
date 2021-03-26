@@ -159,6 +159,15 @@ void AShooterWeapon::SimulateWeaponFire()
 	{
 		PlayWeaponSound(FireSound);
 	}
+	
+	AShooterPlayerController *MyPC = (PawnOwner != nullptr) ? Cast<AShooterPlayerController>(PawnOwner->Controller) : nullptr;
+	if (MyPC && MyPC->IsLocalController())
+	{
+		if (FireCameraShake)
+		{
+			MyPC->ClientPlayCameraShake(FireCameraShake,1);
+		}
+	}
 }
 
 void AShooterWeapon::StopSimulateWeaponFire()

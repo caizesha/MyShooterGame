@@ -190,6 +190,9 @@ protected:
 	int32 CurrentAmmoInClip;
 	
 	AShooterCharacter* PawnOwner;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TSubclassOf<UCameraShake> FireCameraShake;
 private:
 	
 	bool bIsEquiped;
