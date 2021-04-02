@@ -52,6 +52,12 @@ void FShooterMainMenu::Construct(TWeakObjectPtr<UShooterGameInstance> _GameInsta
 		//创建菜单根组件
 		TSharedPtr<FShooterMenuItem> RootMenuItem;
 
+		TArray<FText> OnOffList;
+		OnOffList.Add(LOCTEXT("关", "关"));
+		OnOffList.Add(LOCTEXT("开", "开"));
+
+		MenuHelper::AddMenuOptionSP<FShooterMainMenu>(RootMenuItem, LOCTEXT("全屏", "全屏"), OnOffList, this, &FShooterMainMenu::FullScreenOptionChanged);
+
 		MenuHelper::AddMenuItemSP<FShooterMainMenu>(RootMenuItem, LOCTEXT("放弃", "放弃"), this, &FShooterMainMenu::OnUIQuit);
 
 		MenuWidget->CurrentMenu = RootMenuItem->SubMenu;
@@ -96,5 +102,11 @@ void FShooterMainMenu::OnUIQuit()
 			ViewportClient->ConsoleCommand("quit");
 		}
 	}
+}
+
+void FShooterMainMenu::FullScreenOptionChanged(TSharedPtr<FShooterMenuItem> MenuItem, int32 OptionIndex)
+{
+	//todo
+
 }
 #undef LOCTEXT_NAMESPACE

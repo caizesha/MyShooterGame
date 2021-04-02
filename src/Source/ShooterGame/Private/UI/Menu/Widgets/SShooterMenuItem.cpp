@@ -16,10 +16,20 @@ SShooterMenuItem::~SShooterMenuItem()
 void SShooterMenuItem::Construct(const FArguments& InArgs)
 {
 	PlayerOwner = InArgs._PlayerOwner;
-	Text = InArgs._Text;
-	ItemMargin = 10.0f;
-	TextColor = FLinearColor(155, 164, 182);
 	OnClicked = InArgs._OnClicked;
+	OnArrowPressed = InArgs._OnArrowPressed;
+	Text = InArgs._Text;
+	OptionText = InArgs._OptionText;
+	bIsMultichoice = InArgs._bIsMultichoice;
+
+	bIsActiveMenuItem = false;
+	LeftArrowVisible = EVisibility::Collapsed;
+	RightArrowVisible = EVisibility::Collapsed;
+
+	const float ItemMargin = 10.0f;
+	const float ArrowMargin = 3.0f;
+
+	TextColor = FLinearColor(FColor(155, 164, 182));
 
 	MenuItemStyle = &FShooterStyle::Get().GetWidgetStyle<FShooterMenuItemStyle>("DefaultShooterMenuItemStyle");
 
@@ -42,8 +52,8 @@ void SShooterMenuItem::Construct(const FArguments& InArgs)
 				.Image(&MenuItemStyle->BackgroundBrush)
 			]
 		]
-	+ SOverlay::Slot()
-		.HAlign(HAlign_Center)
+	    + SOverlay::Slot()
+		.HAlign(bIsMultichoice ? HAlign_Left : HAlign_Center)
 		.VAlign(VAlign_Center)
 		.Padding(FMargin(ItemMargin, 0, 0, 0))
 		[
@@ -51,6 +61,59 @@ void SShooterMenuItem::Construct(const FArguments& InArgs)
 			.ColorAndOpacity(this, &SShooterMenuItem::GetButtonTextColor)
 			.TextStyle(FShooterStyle::Get(), "ShooterGame.MenuTextStyle")
 			.Text(Text)
+		]
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Right)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SBorder)
+				.BorderImage(FCoreStyle::Get().GetBrush("NoBorder"))
+				.Padding(FMargin(0, 0, ArrowMargin,0))
+				.Visibility(this, &SShooterMenuItem::GetLeftArrowVisibility)
+				.OnMouseButtonDown(this, &SShooterMenuItem::OnLeftArrowDown)
+				[
+					SNew(SOverlay)
+					+SOverlay::Slot()
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SImage)
+					]
+				]
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(TAttribute<FMargin>(this, &SShooterMenuItem::GetOptionPadding))
+			[
+				SNew(STextBlock)
+				.ColorAndOpacity(this, &SShooterMenuItem::GetButtonTextColor)
+				.TextStyle(FShooterStyle::Get(), "ShooterGame.MenuTextStyle")
+				.Text(OptionText)
+				.Visibility(bIsMultichoice ? EVisibility::Visible : EVisibility::Collapsed)
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SBorder)
+				.BorderImage(FCoreStyle::Get().GetBrush("NoBorder"))
+				.Padding(FMargin(0, 0, ItemMargin, 0))
+				.Visibility(this, &SShooterMenuItem::GetRightArrowVisibility)
+				.OnMouseButtonDown(this, &SShooterMenuItem::OnRightArrowDown)
+				[
+					SNew(SOverlay)
+					+ SOverlay::Slot()
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SImage)
+					]
+				]
+			]
+
 		]
 	];
 }
@@ -89,7 +152,47 @@ void SShooterMenuItem::SetMenuItemActive(bool IsMenuItemActive)
 
 FSlateColor SShooterMenuItem::GetButtonBgColor() const
 {
-	const float BgAlpha = bIsActiveMenuItem ? 0.5 : 0.0;
-	return FLinearColor(1.0, 1.0, 1.0, BgAlpha);
+	const float BgAlpha = bIsActiveMenuItem ? 0.5f : 0.0f;
+	return FLinearColor(1.0f, 1.0f, 1.0f, BgAlpha);
 
+}
+
+EVisibility SShooterMenuItem::GetLeftArrowVisibility() const
+{
+	return LeftArrowVisible;
+}
+
+EVisibility SShooterMenuItem::GetRightArrowVisibility() const
+{
+	return RightArrowVisible;
+}
+
+
+FReply SShooterMenuItem::OnLeftArrowDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	FReply Result = FReply::Unhandled();
+	const int32 MoveLeft = -1;
+	if (OnArrowPressed.IsBound() && bIsActiveMenuItem)
+	{
+		OnArrowPressed.Execute(MoveLeft);
+		Result = FReply::Handled();
+	}
+	return Result;
+}
+
+FReply SShooterMenuItem::OnRightArrowDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	FReply Result = FReply::Unhandled();
+	const int32 MoveRight = 1;
+	if (OnArrowPressed.IsBound() && bIsActiveMenuItem)
+	{
+		OnArrowPressed.Execute(MoveRight);
+		Result = FReply::Handled();
+	}
+	return Result;
+}
+
+FMargin SShooterMenuItem::GetOptionPadding() const
+{
+	return RightArrowVisible == EVisibility::Visible ? FMargin(0) : FMargin(0, 0, ItemMargin, 0);
 }

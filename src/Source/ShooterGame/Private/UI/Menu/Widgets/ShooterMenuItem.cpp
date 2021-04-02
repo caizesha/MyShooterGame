@@ -15,9 +15,9 @@ const FText& FShooterMenuItem::GetText() const
 void FShooterMenuItem::SetText(FText UpdatedText)
 {
 	Text = MoveTemp(UpdatedText);
+
 	if (Widget.IsValid())
 	{
 		Widget->UpdateItemText(Text);
 	}
-
 }

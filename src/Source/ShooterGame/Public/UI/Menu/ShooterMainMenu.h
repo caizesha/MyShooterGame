@@ -13,6 +13,8 @@ class UShooterGameInstance;
 
 class SShooterMenuWidget;
 
+class FShooterMenuItem;
+
 //管理菜单的中间类：负责菜单的创建、显示、隐藏
 class SHOOTERGAME_API FShooterMainMenu : public TSharedFromThis<FShooterMainMenu>, public FTickableGameObject
 {
@@ -39,6 +41,8 @@ public:
 	ULocalPlayer* GetPlayerOwner() const;
 
 	void OnUIQuit();
+
+	void FullScreenOptionChanged(TSharedPtr<FShooterMenuItem> MenuItem, int32 OptionIndex);//totest
 
 protected:
 	//标识玩家

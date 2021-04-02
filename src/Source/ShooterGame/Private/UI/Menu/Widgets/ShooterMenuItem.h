@@ -7,6 +7,18 @@
  * 
  */
 
+//定义菜单项类型
+namespace EShooterMenuItemType
+{
+	enum Type
+	{
+		Root,
+		Standard,
+		MultiChoice,
+		CustomWidget
+	};
+}
+
 typedef TArray<TSharedPtr<class FShooterMenuItem>> MenuPtr;
 
 //加入TSharedFromThis内存管理
@@ -16,13 +28,29 @@ public:
 
 	DECLARE_DELEGATE(FOnConfirmMenuItem)
 
+	DECLARE_DELEGATE_TwoParams(FOnOptionChanged, TSharedPtr<FShooterMenuItem>, int32)
+
 	FOnConfirmMenuItem OnConfirmMenuItem;
+
+	FOnOptionChanged OnOptionChanged;
 
 	FShooterMenuItem(FText _Text)
 	{
 		bVisible = true;
 		//仅做简单引用，防止内存进行一些不必要的拷贝
 		Text = MoveTemp(_Text);
+		MenuItemType = EShooterMenuItemType::Standard;
+
+	}
+
+	FShooterMenuItem(FText _Text, TArray<FText> _MultiChoice, int32 DefaultIndex = 0)
+	{
+		bVisible = true;
+		Text = MoveTemp(_Text);
+		MultiChoice = MoveTemp(_MultiChoice);
+		SelectedMultiChoice = DefaultIndex;
+		MinMultiChoiceIndex = MaxMultiChoiceIndex = -1;
+		MenuItemType = EShooterMenuItemType::MultiChoice;
 	}
 
 	~FShooterMenuItem();
@@ -43,6 +71,16 @@ public:
 	MenuPtr SubMenu;
 
 	bool bVisible;
+
+	TArray<FText> MultiChoice;
+
+	int32 MinMultiChoiceIndex;
+
+	int32 MaxMultiChoiceIndex;
+
+	int32 SelectedMultiChoice;
+
+	EShooterMenuItemType::Type MenuItemType;
 
 private:
 

@@ -168,12 +168,34 @@ void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
 		if (CurrentMenu[i]->bVisible)
 		{
 			TSharedPtr<SWidget> TmpWidget;
-			TmpWidget = SAssignNew(CurrentMenu[i]->Widget, SShooterMenuItem)
-				.PlayerOwner(PlayerOwner)
-				.OnClicked(this, &SShooterMenuWidget::ButtonClicked, i)
-				.Text(CurrentMenu[i]->GetText());
+			if (CurrentMenu[i]->MenuItemType == EShooterMenuItemType::Standard)
+			{
+				TmpWidget = SAssignNew(CurrentMenu[i]->Widget, SShooterMenuItem)
+					.PlayerOwner(PlayerOwner)
+					.OnClicked(this, &SShooterMenuWidget::ButtonClicked, i)
+					.Text(CurrentMenu[i]->GetText())
+					.bIsMultichoice(false);
+			}
+			else if(CurrentMenu[i]->MenuItemType == EShooterMenuItemType::MultiChoice)
+			{
+				TmpWidget = SAssignNew(CurrentMenu[i]->Widget, SShooterMenuItem)
+					.PlayerOwner(PlayerOwner)
+					.OnClicked(this, &SShooterMenuWidget::ButtonClicked, i)
+					.Text(CurrentMenu[i]->GetText())
+					.bIsMultichoice(true)
+					.OptionText(this, &SShooterMenuWidget::GetOptionText, CurrentMenu[i])
+					.OnArrowPressed(this, &SShooterMenuWidget::ChangeOption);
+				
+				//更新箭头图标
+				UpdateArrow(CurrentMenu[i]);
+			}
+			
 			if (TmpWidget.IsValid())
 			{
+				if (SelectedIndex == -1)
+				{
+					SelectedIndex = i;
+				}
 				LeftBox->AddSlot()
 				.HAlign(HAlign_Left)
 				.AutoHeight()
@@ -181,33 +203,15 @@ void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
 					TmpWidget.ToSharedRef()
 				];
 			}
-		}
-		//激活第一个菜单项
-		TSharedPtr<FShooterMenuItem> FirstMenuItem = CurrentMenu.IsValidIndex(SelectedIndex) ? CurrentMenu[SelectedIndex] : nullptr;
-		if (FirstMenuItem.IsValid())
-		{
-			FirstMenuItem->Widget->SetMenuItemActive(true);
-			FSlateApplication::Get().SetKeyboardFocus(SharedThis(this));
-		}
+		}	
 	}
-	//to test 添加透明图片代表菜单项
-	/*LeftBox->AddSlot()
-	.HAlign(HAlign_Left)
-	.AutoHeight()
-	[
-		SNew(SOverlay)
-		+ SOverlay::Slot()
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SBox)
-			.WidthOverride(374.0f)
-			.HeightOverride(23.0f)
-			[
-				SNew(SImage)
-			]
-		]
-	];*/
+	//激活第一个菜单项
+	TSharedPtr<FShooterMenuItem> FirstMenuItem = CurrentMenu.IsValidIndex(SelectedIndex) ? CurrentMenu[SelectedIndex] : nullptr;
+	if (FirstMenuItem.IsValid())
+	{
+		FirstMenuItem->Widget->SetMenuItemActive(true);
+		FSlateApplication::Get().SetKeyboardFocus(SharedThis(this));
+	}
 }
 
 void SShooterMenuWidget::BuildRightPanel()
@@ -224,9 +228,21 @@ void SShooterMenuWidget::BuildRightPanel()
 		if (NextMenu[i]->bVisible)
 		{
 			TSharedPtr<SWidget> TmpWidget;
-			TmpWidget = SAssignNew(NextMenu[i]->Widget, SShooterMenuItem)
-				.PlayerOwner(PlayerOwner)
-				.Text(NextMenu[i]->GetText());
+			if (NextMenu[i]->MenuItemType == EShooterMenuItemType::Standard)
+			{
+				TmpWidget = SAssignNew(NextMenu[i]->Widget, SShooterMenuItem)
+					.PlayerOwner(PlayerOwner)
+					.Text(NextMenu[i]->GetText())
+					.bIsMultichoice(false);
+			}
+			else if (NextMenu[i]->MenuItemType == EShooterMenuItemType::MultiChoice)
+			{
+				TmpWidget = SAssignNew(NextMenu[i]->Widget, SShooterMenuItem)
+					.PlayerOwner(PlayerOwner)
+					.Text(NextMenu[i]->GetText())
+					.bIsMultichoice(true)
+					.OptionText(this, &SShooterMenuWidget::GetOptionText, NextMenu[i]);
+			}
 			if (TmpWidget.IsValid())
 			{
 				RightBox->AddSlot()
@@ -238,24 +254,6 @@ void SShooterMenuWidget::BuildRightPanel()
 			}
 		}
 	}
-	//to test 添加透明图片代表菜单项
-	/*RightBox->AddSlot()
-		.HAlign(HAlign_Left)
-		.AutoHeight()
-		[
-			SNew(SOverlay)
-			+ SOverlay::Slot()
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			[
-				SNew(SBox)
-				.WidthOverride(374.0f)
-				.HeightOverride(23.0f)
-				[
-					SNew(SImage)
-				]
-			]
-		];*/
 }
 
 FMargin SShooterMenuWidget::GetMenuOffset() const
@@ -313,7 +311,7 @@ FReply SShooterMenuWidget::ButtonClicked(int32 ButtonIndex)
 
 	}
 	//第二次被点击
-	else
+	else if (SelectedIndex == ButtonIndex)
 	{
 		ConfirmMenuItem();
 	}
@@ -332,4 +330,66 @@ void SShooterMenuWidget::ConfirmMenuItem()
 		//进入二级菜单
 	}
 	
+}
+
+//根据index获取选项对应文本
+FText SShooterMenuWidget::GetOptionText(TSharedPtr<FShooterMenuItem> MenuItem) const
+{
+	FText Result = FText::GetEmpty();
+
+	if (MenuItem->SelectedMultiChoice > -1 && MenuItem->SelectedMultiChoice < MenuItem->MultiChoice.Num())
+	{
+		Result = MenuItem->MultiChoice[MenuItem->SelectedMultiChoice];
+	}
+	return Result;
+}
+
+//更改选项
+void SShooterMenuWidget::ChangeOption(int32 MoveBy)
+{
+	TSharedPtr<FShooterMenuItem> MenuItem = CurrentMenu[SelectedIndex];
+	const int32 MinIndex = MenuItem->MinMultiChoiceIndex > -1 ? MenuItem->MinMultiChoiceIndex : 0;
+	const int32 MaxIndex = MenuItem->MaxMultiChoiceIndex > -1 ? MenuItem->MaxMultiChoiceIndex : MenuItem->MultiChoice.Num() - 1;
+
+	const int32 CurrentIndex = MenuItem->SelectedMultiChoice;
+
+	if (MenuItem->MenuItemType == EShooterMenuItemType::MultiChoice)
+	{
+		if ( CurrentIndex + MoveBy >= MinIndex && CurrentIndex + MoveBy <= MaxIndex )
+		{
+			MenuItem->SelectedMultiChoice += MoveBy;
+			//定义OnOptionChanged代理，处理选项关联的实际逻辑
+			MenuItem->OnOptionChanged.ExecuteIfBound(MenuItem, MenuItem->SelectedMultiChoice);
+		}
+		UpdateArrow(MenuItem);
+	}
+}
+
+
+//根据当前index判断左右箭头是否显示
+void SShooterMenuWidget::UpdateArrow(TSharedPtr<FShooterMenuItem> MenuItem)
+{
+	const int32 MinIndex = MenuItem->MinMultiChoiceIndex > -1 ? MenuItem->MinMultiChoiceIndex : 0;
+	const int32 MaxIndex = MenuItem->MaxMultiChoiceIndex > -1 ? MenuItem->MaxMultiChoiceIndex : MenuItem->MultiChoice.Num() - 1;
+
+	const int32 CurrentIndex = MenuItem->SelectedMultiChoice;
+
+	if (CurrentIndex > MinIndex)
+	{
+		MenuItem->Widget->LeftArrowVisible = EVisibility::Visible;
+	}
+	else
+	{
+		MenuItem->Widget->LeftArrowVisible = EVisibility::Collapsed;
+	}
+
+	if (CurrentIndex < MaxIndex)
+	{
+		MenuItem->Widget->RightArrowVisible = EVisibility::Visible;
+	}
+	else
+	{
+		MenuItem->Widget->RightArrowVisible = EVisibility::Collapsed;
+	}
+
 }

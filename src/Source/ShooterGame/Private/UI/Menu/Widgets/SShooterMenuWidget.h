@@ -31,18 +31,7 @@ public:
 	virtual ~SShooterMenuWidget();
 
 	void Construct (const FArguments& InArgs);
-
-	FText GetMenuTitle() const;
-
-	FLinearColor GetBottomColor() const;
-
-	//左右容器填充图片作为测试控件
-	void BuildAndShowMenu();
-
-	void BuildLeftPanel(bool bGoingBack = false);
-
-	void BuildRightPanel();
-
+	
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)override;
 
 	virtual bool SupportsKeyboardFocus()const override { return true; }
@@ -51,19 +40,36 @@ public:
 
 	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
+	FText GetMenuTitle() const;
+
+	FLinearColor GetBottomColor() const;
+
+	FText GetOptionText(TSharedPtr<FShooterMenuItem> MenuItem) const;
+
+	void ChangeOption(int32 MoveBy);
+
+	void UpdateArrow(TSharedPtr<FShooterMenuItem> MenuItem);
+
+	//左右容器填充图片作为测试控件
+	void BuildAndShowMenu();
+
+	void BuildLeftPanel(bool bGoingBack = false);
+
+	void BuildRightPanel();
+
+	//实现菜单居中显示，获得菜单偏移量
+	FMargin GetMenuOffset() const;
+
 	//ButtonIndex:当前点击的菜单项
 	FReply ButtonClicked(int32 ButtonIndex);
 
 	void ConfirmMenuItem();
 
-
-	//实现菜单居中显示，获得菜单偏移量
-	FMargin GetMenuOffset() const;
-
 	MenuPtr CurrentMenu;//当前一级菜单项列表
 
 	MenuPtr NextMenu;//下一菜单项列表
 
+	//int32 test = 1;
 private:
 	TWeakObjectPtr<ULocalPlayer> PlayerOwner;
 
@@ -87,7 +93,7 @@ private:
 
 };
 
-//提供创建标准菜单项的辅助函数
+//提供创建标准菜单项、多选项菜单项的辅助函数
 namespace MenuHelper
 {
 	//对传入的父菜单项进行判断
@@ -98,6 +104,7 @@ namespace MenuHelper
 			ParentMenuItem = FShooterMenuItem::CreateRoot();
 		}
 	}
+
 	//创建标准菜单项并绑定响应函数 内联函数：将函数内容全部内迁到调用处
 	template<class UserClass>
 	FORCEINLINE TSharedRef<FShooterMenuItem> AddMenuItemSP(TSharedPtr<FShooterMenuItem>& ParentMenuItem, const FText& Text, UserClass* InObj, typename FShooterMenuItem::FOnConfirmMenuItem::TSPMethodDelegate<UserClass>::FMethodPtr InMethod)
@@ -107,5 +114,16 @@ namespace MenuHelper
 		Item->OnConfirmMenuItem.BindSP(InObj, InMethod);
 		ParentMenuItem->SubMenu.Add(Item);
 		return Item.ToSharedRef();
+	}
+
+	//创建多选项菜单项并绑定响应函数
+	template<class UserClass>
+	FORCEINLINE TSharedRef<FShooterMenuItem> AddMenuOptionSP(TSharedPtr<FShooterMenuItem>& ParentMenuItem, const FText& Text, const TArray<FText>& OptionList, UserClass* InObj, typename FShooterMenuItem::FOnOptionChanged::TSPMethodDelegate<UserClass>::FMethodPtr InMethod)
+	{
+		EnsureValid(ParentMenuItem);
+		TSharedPtr<FShooterMenuItem> Item = MakeShareable(new FShooterMenuItem(Text, OptionList));
+		Item->OnOptionChanged.BindSP(InObj, InMethod);
+		ParentMenuItem->SubMenu.Add(Item);
+		return ParentMenuItem->SubMenu.Last().ToSharedRef();
 	}
 }
