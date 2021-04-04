@@ -40,11 +40,16 @@ public:
 
 	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
+	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)override;
+
 	FText GetMenuTitle() const;
 
 	FLinearColor GetBottomColor() const;
 
 	FText GetOptionText(TSharedPtr<FShooterMenuItem> MenuItem) const;
+
+	//ButtonIndex:当前点击的菜单项
+	FReply ButtonClicked(int32 ButtonIndex);
 
 	void ChangeOption(int32 MoveBy);
 
@@ -60,16 +65,17 @@ public:
 	//实现菜单居中显示，获得菜单偏移量
 	FMargin GetMenuOffset() const;
 
-	//ButtonIndex:当前点击的菜单项
-	FReply ButtonClicked(int32 ButtonIndex);
-
 	void ConfirmMenuItem();
+
+	//获取下一个索引
+	int32 GetNextValidIndex(int32 MoveBy);
+
+	int32 GetOwnerUserIndex();
 
 	MenuPtr CurrentMenu;//当前一级菜单项列表
 
 	MenuPtr NextMenu;//下一菜单项列表
 
-	//int32 test = 1;
 private:
 	TWeakObjectPtr<ULocalPlayer> PlayerOwner;
 

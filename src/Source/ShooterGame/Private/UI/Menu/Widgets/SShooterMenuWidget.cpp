@@ -292,6 +292,50 @@ FReply SShooterMenuWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const 
 	return FReply::Handled().SetUserFocus(SharedThis(this), EFocusCause::SetDirectly);
 }
 
+FReply SShooterMenuWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
+{
+	FReply Result = FReply::Unhandled();
+
+	//获取当前用户索引
+	const int32 UserIndex = InKeyEvent.GetUserIndex();
+	const int32 OwnerIndex = GetOwnerUserIndex();
+
+	bool bEventUserCanInteract = UserIndex == OwnerIndex;
+	if (bEventUserCanInteract)
+	{
+		//获取按下的按键
+		const FKey Key = InKeyEvent.GetKey();
+
+		if (Key == EKeys::Up)
+		{
+			int32 NextValidIndex = GetNextValidIndex(-1);
+			//进行边界控制
+			if (NextValidIndex != SelectedIndex)
+			{
+				//复用buttonclick逻辑
+				ButtonClicked(NextValidIndex);
+			}
+			Result = FReply::Handled();
+		}
+		else if (Key == EKeys::Down)
+		{
+			int32 NextValidIndex = GetNextValidIndex(1);
+			if (NextValidIndex != SelectedIndex)
+			{
+				ButtonClicked(NextValidIndex);
+			}
+			Result = FReply::Handled();
+
+		}
+		else if (Key == EKeys::Enter)
+		{
+			ConfirmMenuItem();
+			Result = FReply::Handled();
+		}
+	}
+	return Result;
+}
+
 FReply SShooterMenuWidget::ButtonClicked(int32 ButtonIndex)
 {
 	//第一次被点击
@@ -392,4 +436,29 @@ void SShooterMenuWidget::UpdateArrow(TSharedPtr<FShooterMenuItem> MenuItem)
 		MenuItem->Widget->RightArrowVisible = EVisibility::Collapsed;
 	}
 
+}
+
+int32 SShooterMenuWidget::GetNextValidIndex(int32 MoveBy)
+{
+	int32 Result = SelectedIndex;
+	//对上下边界的处理
+	if (MoveBy != 0 && SelectedIndex + MoveBy > -1 && SelectedIndex + MoveBy < CurrentMenu.Num())
+	{
+		Result += MoveBy;
+		while (!CurrentMenu[Result]->Widget.IsValid())
+		{
+			MoveBy > 0 ? Result++ : Result--;
+			if (!CurrentMenu.IsValidIndex(Result))
+			{
+				Result = SelectedIndex;
+				break;
+			}
+		}
+	}
+	return Result;
+}
+
+int32 SShooterMenuWidget::GetOwnerUserIndex()
+{
+	return PlayerOwner.IsValid() ? PlayerOwner->GetControllerId() : 0;
 }
