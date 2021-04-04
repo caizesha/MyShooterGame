@@ -35,103 +35,101 @@ void SShooterMenuWidget::Construct(const FArguments& InArgs)
 		[
 			SNew(SOverlay)
 			+ SOverlay::Slot()
-		.HAlign(HAlign_Fill)//设置对齐属性
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SVerticalBox)//包含菜单标题和左右背景容器
-			+ SVerticalBox::Slot()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Top)
-		.Padding(TAttribute<FMargin>(this, &SShooterMenuWidget::GetMenuOffset))
-		[
-			SNew(SVerticalBox)//包含菜单标题
-			+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNew(SOverlay)
-			+ SOverlay::Slot()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SBox)
-			.WidthOverride(MenuHeaderWidth)
-		.HeightOverride(MenuHeaderHeight)
-		[
-			SNew(SImage)
-			.Image(&MenuStyle->HeaderBackgroundBrush)
-		]
-		]
-	+ SOverlay::Slot()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SBox)
-			.WidthOverride(MenuHeaderWidth)
-		.HeightOverride(MenuHeaderHeight)
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		[
-			SNew(STextBlock)
-			.TextStyle(FShooterStyle::Get(), "ShooterGame.MenuHeaderTextStyle")
-		.ColorAndOpacity(MenuTitleTextColor)
-		.Text(this, &SShooterMenuWidget::GetMenuTitle)
-		]
-		]
-		]
-	+ SVerticalBox::Slot()//包含左右背景容器
-		.AutoHeight()
-		[
-			SNew(SBorder)
-			.BorderImage(FCoreStyle::Get().GetBrush("NoBorder"))
-		.ColorAndOpacity(this, &SShooterMenuWidget::GetBottomColor)
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Top)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()//左边一级菜单
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNew(SBorder)
-			.BorderImage(&MenuStyle->LeftBackgroundBrush)
-		.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
-		.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Top)
-		[
-			SAssignNew(LeftBox, SVerticalBox)//运行时动态添加子控件（菜单项）
-			//cachedesigned 左右容器填充图片作为测试控件
-		]
-		]
-		]
-	+ SHorizontalBox::Slot()//右边二级菜单
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNew(SBorder)
-			.BorderImage(&MenuStyle->RightBackgroundBrush)
-		.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
-		.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
-		.DesiredSizeScale(this, &SShooterMenuWidget::GetBottomScale)
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Top)
-		[
-			SAssignNew(RightBox, SVerticalBox)//运行时动态添加子控件（菜单项）
-		]
-		]
-		]
-
-		]
-		]
-
-		]
-		]
+			.HAlign(HAlign_Fill)//设置对齐属性
+			.VAlign(VAlign_Fill)
+			[
+				SNew(SVerticalBox)//包含菜单标题和左右背景容器
+				+ SVerticalBox::Slot()
+				.HAlign(HAlign_Left)
+				.VAlign(VAlign_Top)
+				.Padding(TAttribute<FMargin>(this, &SShooterMenuWidget::GetMenuOffset))
+				[
+					SNew(SVerticalBox)//包含菜单标题
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SOverlay)
+						+ SOverlay::Slot()
+						.HAlign(HAlign_Left)
+						.VAlign(VAlign_Fill)
+						[
+							SNew(SBox)
+							.WidthOverride(MenuHeaderWidth)
+							.HeightOverride(MenuHeaderHeight)
+							[
+								SNew(SImage)
+								.Image(&MenuStyle->HeaderBackgroundBrush)
+							]
+						]
+						+ SOverlay::Slot()
+							.HAlign(HAlign_Left)
+							.VAlign(VAlign_Fill)
+							[
+								SNew(SBox)
+								.WidthOverride(MenuHeaderWidth)
+								.HeightOverride(MenuHeaderHeight)
+								.HAlign(HAlign_Center)
+								.VAlign(VAlign_Center)
+								[
+									SNew(STextBlock)
+									.TextStyle(FShooterStyle::Get(), "ShooterGame.MenuHeaderTextStyle")
+									.ColorAndOpacity(MenuTitleTextColor)
+									.Text(this, &SShooterMenuWidget::GetMenuTitle)
+								]
+							]
+					]
+					+ SVerticalBox::Slot()//包含左右背景容器
+					.AutoHeight()
+					[
+						SNew(SBorder)
+						.BorderImage(FCoreStyle::Get().GetBrush("NoBorder"))
+						.ColorAndOpacity(this, &SShooterMenuWidget::GetBottomColor)
+						.HAlign(HAlign_Left)
+						.VAlign(VAlign_Top)
+						[
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()//左边一级菜单
+							.AutoWidth()
+							[
+								SNew(SVerticalBox)
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(SBorder)
+									.BorderImage(&MenuStyle->LeftBackgroundBrush)
+									.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
+									.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
+									.HAlign(HAlign_Left)
+									.VAlign(VAlign_Top)
+									[
+									SAssignNew(LeftBox, SVerticalBox)//运行时动态添加子控件（菜单项）
+									//cachedesigned 左右容器填充图片作为测试控件
+									]
+								]
+							]
+							+ SHorizontalBox::Slot()//右边二级菜单
+							.AutoWidth()
+							[
+								SNew(SVerticalBox)
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(SBorder)
+									.BorderImage(&MenuStyle->RightBackgroundBrush)
+									.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
+									.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
+									.DesiredSizeScale(this, &SShooterMenuWidget::GetBottomScale)
+									.HAlign(HAlign_Left)
+									.VAlign(VAlign_Top)
+									[
+										SAssignNew(RightBox, SVerticalBox)//运行时动态添加子控件（菜单项）
+									]
+								]
+							]
+						]
+					]
+				]
+			]
 		];
 }
 

@@ -26,7 +26,7 @@ void SShooterMenuItem::Construct(const FArguments& InArgs)
 	LeftArrowVisible = EVisibility::Collapsed;
 	RightArrowVisible = EVisibility::Collapsed;
 
-	const float ItemMargin = 10.0f;
+	ItemMargin = 10.0f;
 	const float ArrowMargin = 3.0f;
 
 	TextColor = FLinearColor(FColor(155, 164, 182));
