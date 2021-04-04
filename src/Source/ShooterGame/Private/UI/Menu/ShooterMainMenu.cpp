@@ -39,6 +39,9 @@ void FShooterMainMenu::Construct(TWeakObjectPtr<UShooterGameInstance> _GameInsta
 	MenuWidget.Reset();
 	MenuWidgetContainer.Reset();
 
+	ShooterOptions = MakeShareable(new FShooterOptions());
+	ShooterOptions->Construct(_PlayerOwner.Get());
+
 	//创建菜单UI管理对象
 	if (GEngine && GEngine->GameViewport)
 	{
@@ -49,14 +52,9 @@ void FShooterMainMenu::Construct(TWeakObjectPtr<UShooterGameInstance> _GameInsta
 		SAssignNew(MenuWidgetContainer, SWeakWidget)
 			.PossiblyNullContent(MenuWidget);//传递widget内容
 
-		//创建菜单根组件
 		TSharedPtr<FShooterMenuItem> RootMenuItem;
 
-		TArray<FText> OnOffList;
-		OnOffList.Add(LOCTEXT("关", "关"));
-		OnOffList.Add(LOCTEXT("开", "开"));
-
-		MenuHelper::AddMenuOptionSP<FShooterMainMenu>(RootMenuItem, LOCTEXT("全屏", "全屏"), OnOffList, this, &FShooterMainMenu::FullScreenOptionChanged);
+		MenuHelper::AddExistingMenuItem(RootMenuItem, ShooterOptions->OptionsItem.ToSharedRef());
 
 		MenuHelper::AddMenuItemSP<FShooterMainMenu>(RootMenuItem, LOCTEXT("放弃", "放弃"), this, &FShooterMainMenu::OnUIQuit);
 
@@ -72,7 +70,7 @@ void FShooterMainMenu::AddMenuToViewport()
 		//获取游戏窗口
 		UGameViewportClient* const  GVC = GEngine->GameViewport;
 		GVC->AddViewportWidgetContent(MenuWidgetContainer.ToSharedRef());
-	
+
 	}
 }
 
@@ -96,7 +94,7 @@ void FShooterMainMenu::OnUIQuit()
 {
 	if (ensure(GameInstance.IsValid()))
 	{
-		UGameViewportClient* const ViewportClient  = GameInstance->GetGameViewportClient();
+		UGameViewportClient* const ViewportClient = GameInstance->GetGameViewportClient();
 		if (ensure(ViewportClient))
 		{
 			ViewportClient->ConsoleCommand("quit");
@@ -104,9 +102,4 @@ void FShooterMainMenu::OnUIQuit()
 	}
 }
 
-void FShooterMainMenu::FullScreenOptionChanged(TSharedPtr<FShooterMenuItem> MenuItem, int32 OptionIndex)
-{
-	//todo
-
-}
 #undef LOCTEXT_NAMESPACE

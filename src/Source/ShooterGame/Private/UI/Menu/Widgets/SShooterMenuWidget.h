@@ -7,13 +7,13 @@
 #include "Widgets/ShooterMenuItem.h"
 
 /**
- * 
+ *
  */
 
 struct FShooterMenuStyle;
 
 //UI管理类：用于界面搭建、界面相应逻辑管理
-class SShooterMenuWidget: public SCompoundWidget
+class SShooterMenuWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SShooterMenuWidget)
@@ -23,15 +23,15 @@ public:
 	}
 
 	SLATE_ARGUMENT(TWeakObjectPtr<ULocalPlayer>, PlayerOwner)//变量声明
-	SLATE_END_ARGS()
+		SLATE_END_ARGS()
 
 
-	SShooterMenuWidget();
+		SShooterMenuWidget();
 
 	virtual ~SShooterMenuWidget();
 
-	void Construct (const FArguments& InArgs);
-	
+	void Construct(const FArguments& InArgs);
+
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)override;
 
 	virtual bool SupportsKeyboardFocus()const override { return true; }
@@ -67,6 +67,8 @@ public:
 
 	void ConfirmMenuItem();
 
+	FVector2D GetBottomScale() const;
+
 	//获取下一个索引
 	int32 GetNextValidIndex(int32 MoveBy);
 
@@ -80,7 +82,7 @@ private:
 	TWeakObjectPtr<ULocalPlayer> PlayerOwner;
 
 	float MenuHeaderWidth;
-	
+
 	float MenuHeaderHeight;
 
 	float OutlineWidth;
@@ -109,6 +111,24 @@ namespace MenuHelper
 		{
 			ParentMenuItem = FShooterMenuItem::CreateRoot();
 		}
+	}
+
+	//创建标准菜单项,不绑定响应函数
+	FORCEINLINE TSharedRef<FShooterMenuItem> AddMenuItem(TSharedPtr<FShooterMenuItem>& ParentMenuItem, const FText& Text)
+	{
+		EnsureValid(ParentMenuItem);
+		TSharedPtr<FShooterMenuItem> Item = MakeShareable(new FShooterMenuItem(Text));
+		ParentMenuItem->SubMenu.Add(Item);
+		return Item.ToSharedRef();
+	}
+
+	//辅助函数：添加已存在菜单项
+	FORCEINLINE TSharedRef<FShooterMenuItem> AddExistingMenuItem(TSharedPtr<FShooterMenuItem>& ParentMenuItem, TSharedRef<FShooterMenuItem> SubMenuItem)
+	{
+		EnsureValid(ParentMenuItem);
+		ParentMenuItem->SubMenu.Add(SubMenuItem);
+		return ParentMenuItem->SubMenu.Last().ToSharedRef();
+
 	}
 
 	//创建标准菜单项并绑定响应函数 内联函数：将函数内容全部内迁到调用处

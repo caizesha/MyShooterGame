@@ -32,106 +32,107 @@ void SShooterMenuWidget::Construct(const FArguments& InArgs)
 
 	//构建ui
 	ChildSlot
-	[
-		SNew(SOverlay)
-		+ SOverlay::Slot()
+		[
+			SNew(SOverlay)
+			+ SOverlay::Slot()
 		.HAlign(HAlign_Fill)//设置对齐属性
 		.VAlign(VAlign_Fill)
 		[
 			SNew(SVerticalBox)//包含菜单标题和左右背景容器
 			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Left)
-			.VAlign(VAlign_Top)
-			.Padding(TAttribute<FMargin>(this, &SShooterMenuWidget::GetMenuOffset))
-			[
-				SNew(SVerticalBox)//包含菜单标题
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SOverlay)
-					+ SOverlay::Slot()
-					.HAlign(HAlign_Left)
-					.VAlign(VAlign_Fill)
-					[
-						SNew(SBox)
-						.WidthOverride(MenuHeaderWidth)
-						.HeightOverride(MenuHeaderHeight)
-						[
-							SNew(SImage)
-							.Image(&MenuStyle->HeaderBackgroundBrush)
-						]
-					]
-					+ SOverlay::Slot()
-					.HAlign(HAlign_Left)
-					.VAlign(VAlign_Fill)
-					[
-						SNew(SBox)
-						.WidthOverride(MenuHeaderWidth)
-						.HeightOverride(MenuHeaderHeight)
-						.HAlign(HAlign_Center)
-						.VAlign(VAlign_Center)
-						[
-							SNew(STextBlock)
-							.TextStyle(FShooterStyle::Get(), "ShooterGame.MenuHeaderTextStyle")
-							.ColorAndOpacity(MenuTitleTextColor)
-							.Text(this, &SShooterMenuWidget::GetMenuTitle)
-						]
-					]
-				]
-				+ SVerticalBox::Slot()//包含左右背景容器
-				.AutoHeight()
-				[
-					SNew(SBorder)
-					.BorderImage(FCoreStyle::Get().GetBrush("NoBorder"))
-					.ColorAndOpacity(this, &SShooterMenuWidget::GetBottomColor)
-					.HAlign(HAlign_Left)
-					.VAlign(VAlign_Top)
-					[
-						SNew(SHorizontalBox)
-						+SHorizontalBox::Slot()//左边一级菜单
-						.AutoWidth()
-						[
-							SNew(SVerticalBox)
-							+SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(SBorder)
-								.BorderImage(&MenuStyle->LeftBackgroundBrush)
-								.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
-								.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
-								.HAlign(HAlign_Left)
-								.VAlign(VAlign_Top)
-								[
-									SAssignNew(LeftBox, SVerticalBox)//运行时动态添加子控件（菜单项）
-									//cachedesigned 左右容器填充图片作为测试控件
-								]
-							]
-						]
-						+ SHorizontalBox::Slot()//右边二级菜单
-						.AutoWidth()
-						[
-							SNew(SVerticalBox)
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(SBorder)
-								.BorderImage(&MenuStyle->RightBackgroundBrush)
-								.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
-								.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
-								.HAlign(HAlign_Left)
-								.VAlign(VAlign_Top)
-								[
-									SAssignNew(RightBox, SVerticalBox)//运行时动态添加子控件（菜单项）
-								]
-							]
-						]
-
-					]
-				]
-
-			]
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Top)
+		.Padding(TAttribute<FMargin>(this, &SShooterMenuWidget::GetMenuOffset))
+		[
+			SNew(SVerticalBox)//包含菜单标题
+			+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(SOverlay)
+			+ SOverlay::Slot()
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Fill)
+		[
+			SNew(SBox)
+			.WidthOverride(MenuHeaderWidth)
+		.HeightOverride(MenuHeaderHeight)
+		[
+			SNew(SImage)
+			.Image(&MenuStyle->HeaderBackgroundBrush)
 		]
-	];
+		]
+	+ SOverlay::Slot()
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Fill)
+		[
+			SNew(SBox)
+			.WidthOverride(MenuHeaderWidth)
+		.HeightOverride(MenuHeaderHeight)
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(FShooterStyle::Get(), "ShooterGame.MenuHeaderTextStyle")
+		.ColorAndOpacity(MenuTitleTextColor)
+		.Text(this, &SShooterMenuWidget::GetMenuTitle)
+		]
+		]
+		]
+	+ SVerticalBox::Slot()//包含左右背景容器
+		.AutoHeight()
+		[
+			SNew(SBorder)
+			.BorderImage(FCoreStyle::Get().GetBrush("NoBorder"))
+		.ColorAndOpacity(this, &SShooterMenuWidget::GetBottomColor)
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Top)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()//左边一级菜单
+		.AutoWidth()
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(SBorder)
+			.BorderImage(&MenuStyle->LeftBackgroundBrush)
+		.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
+		.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Top)
+		[
+			SAssignNew(LeftBox, SVerticalBox)//运行时动态添加子控件（菜单项）
+			//cachedesigned 左右容器填充图片作为测试控件
+		]
+		]
+		]
+	+ SHorizontalBox::Slot()//右边二级菜单
+		.AutoWidth()
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(SBorder)
+			.BorderImage(&MenuStyle->RightBackgroundBrush)
+		.BorderBackgroundColor(FLinearColor(1.0, 1.0, 1.0, 1.0))
+		.Padding(FMargin(OutlineWidth))//设置前后左右对齐距离
+		.DesiredSizeScale(this, &SShooterMenuWidget::GetBottomScale)
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Top)
+		[
+			SAssignNew(RightBox, SVerticalBox)//运行时动态添加子控件（菜单项）
+		]
+		]
+		]
+
+		]
+		]
+
+		]
+		]
+		];
 }
 
 
@@ -151,7 +152,15 @@ void SShooterMenuWidget::BuildAndShowMenu()
 
 	BuildLeftPanel();
 
-	BuildRightPanel();
+	if (CurrentMenu.Num() > 0 && CurrentMenu.IsValidIndex(SelectedIndex) && CurrentMenu[SelectedIndex]->bVisible)
+	{
+		NextMenu = CurrentMenu[SelectedIndex]->SubMenu;
+		if (NextMenu.Num() > 0)
+		{
+			BuildRightPanel();
+		}
+	}
+
 }
 
 void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
@@ -176,7 +185,7 @@ void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
 					.Text(CurrentMenu[i]->GetText())
 					.bIsMultichoice(false);
 			}
-			else if(CurrentMenu[i]->MenuItemType == EShooterMenuItemType::MultiChoice)
+			else if (CurrentMenu[i]->MenuItemType == EShooterMenuItemType::MultiChoice)
 			{
 				TmpWidget = SAssignNew(CurrentMenu[i]->Widget, SShooterMenuItem)
 					.PlayerOwner(PlayerOwner)
@@ -185,11 +194,11 @@ void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
 					.bIsMultichoice(true)
 					.OptionText(this, &SShooterMenuWidget::GetOptionText, CurrentMenu[i])
 					.OnArrowPressed(this, &SShooterMenuWidget::ChangeOption);
-				
+
 				//更新箭头图标
 				UpdateArrow(CurrentMenu[i]);
 			}
-			
+
 			if (TmpWidget.IsValid())
 			{
 				if (SelectedIndex == -1)
@@ -197,13 +206,13 @@ void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
 					SelectedIndex = i;
 				}
 				LeftBox->AddSlot()
-				.HAlign(HAlign_Left)
-				.AutoHeight()
-				[
-					TmpWidget.ToSharedRef()
-				];
+					.HAlign(HAlign_Left)
+					.AutoHeight()
+					[
+						TmpWidget.ToSharedRef()
+					];
 			}
-		}	
+		}
 	}
 	//激活第一个菜单项
 	TSharedPtr<FShooterMenuItem> FirstMenuItem = CurrentMenu.IsValidIndex(SelectedIndex) ? CurrentMenu[SelectedIndex] : nullptr;
@@ -246,11 +255,11 @@ void SShooterMenuWidget::BuildRightPanel()
 			if (TmpWidget.IsValid())
 			{
 				RightBox->AddSlot()
-				.HAlign(HAlign_Center)
-				.AutoHeight()
-				[
-					TmpWidget.ToSharedRef()
-				];
+					.HAlign(HAlign_Center)
+					.AutoHeight()
+					[
+						TmpWidget.ToSharedRef()
+					];
 			}
 		}
 	}
@@ -373,7 +382,7 @@ void SShooterMenuWidget::ConfirmMenuItem()
 		//todo
 		//进入二级菜单
 	}
-	
+
 }
 
 //根据index获取选项对应文本
@@ -399,7 +408,7 @@ void SShooterMenuWidget::ChangeOption(int32 MoveBy)
 
 	if (MenuItem->MenuItemType == EShooterMenuItemType::MultiChoice)
 	{
-		if ( CurrentIndex + MoveBy >= MinIndex && CurrentIndex + MoveBy <= MaxIndex )
+		if (CurrentIndex + MoveBy >= MinIndex && CurrentIndex + MoveBy <= MaxIndex)
 		{
 			MenuItem->SelectedMultiChoice += MoveBy;
 			//定义OnOptionChanged代理，处理选项关联的实际逻辑
@@ -461,4 +470,16 @@ int32 SShooterMenuWidget::GetNextValidIndex(int32 MoveBy)
 int32 SShooterMenuWidget::GetOwnerUserIndex()
 {
 	return PlayerOwner.IsValid() ? PlayerOwner->GetControllerId() : 0;
+}
+
+FVector2D SShooterMenuWidget::GetBottomScale() const
+{
+	if (NextMenu.Num() > 0)
+	{
+		return FVector2D(1.0f, 1.0f);
+	}
+	else
+	{
+		return FVector2D(0.0f, 0.0f);
+	}
 }
