@@ -35,13 +35,17 @@ void FShooterOptions::Construct(ULocalPlayer* InPlayerOwner)
 
 void FShooterOptions::FullScreenOptionChanged(TSharedPtr<FShooterMenuItem> MenuItem, int32 OptionIndex)
 {
-	//todo
-
+	bIsFullScreen = OptionIndex == 0 ? EWindowMode::Windowed : EWindowMode::WindowedFullscreen;
 }
 
 //处理所有应用配置
 void FShooterOptions::OnApplySettings()
 {
-	//todo
+	GEngine->GetGameUserSettings()->SetFullscreenMode(bIsFullScreen);
+	// 应用配置 （参数：是否考虑控制台的设置）
+	GEngine->GetGameUserSettings()->ApplySettings(false);
+
+	OnApplyChanges.ExecuteIfBound();
+
 }
 #undef LOCTEXT_NAMESPACE

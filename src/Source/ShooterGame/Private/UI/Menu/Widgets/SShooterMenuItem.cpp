@@ -82,6 +82,7 @@ void SShooterMenuItem::Construct(const FArguments& InArgs)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SImage)
+						.Image(&MenuItemStyle->LeftArrowBrush)
 					]
 				]
 			]
@@ -110,6 +111,7 @@ void SShooterMenuItem::Construct(const FArguments& InArgs)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SImage)
+						.Image(&MenuItemStyle->RightArrowBrush)
 					]
 				]
 			]

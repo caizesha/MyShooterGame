@@ -27,6 +27,14 @@ struct FShooterMenuItemStyle :public FSlateWidgetStyle
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	FSlateBrush BackgroundBrush;
 	FShooterMenuItemStyle& SetBackgroundBrush(FSlateBrush& InBackgroundBrush) { BackgroundBrush = InBackgroundBrush; }
+
+	UPROPERTY(EditAnywhere, Category = "Appearance")
+	FSlateBrush LeftArrowBrush;
+	FShooterMenuItemStyle& SetLeftArrowBrush(FSlateBrush& InLeftArrowBrush) { LeftArrowBrush = InLeftArrowBrush; }
+
+	UPROPERTY(EditAnywhere, Category = "Appearance")
+	FSlateBrush RightArrowBrush;
+	FShooterMenuItemStyle& SetRightArrowBrush(FSlateBrush& InRightArrowBrush) { RightArrowBrush = InRightArrowBrush; }
 };
 
 UCLASS(hidecategories = Object, MinimalAPI)

@@ -41,7 +41,7 @@ void FShooterMainMenu::Construct(TWeakObjectPtr<UShooterGameInstance> _GameInsta
 
 	ShooterOptions = MakeShareable(new FShooterOptions());
 	ShooterOptions->Construct(_PlayerOwner.Get());
-
+	ShooterOptions->OnApplyChanges.BindSP(this, &FShooterMainMenu::CloseSubMenu);
 	//创建菜单UI管理对象
 	if (GEngine && GEngine->GameViewport)
 	{
@@ -59,6 +59,7 @@ void FShooterMainMenu::Construct(TWeakObjectPtr<UShooterGameInstance> _GameInsta
 		MenuHelper::AddMenuItemSP<FShooterMainMenu>(RootMenuItem, LOCTEXT("放弃", "放弃"), this, &FShooterMainMenu::OnUIQuit);
 
 		MenuWidget->CurrentMenu = RootMenuItem->SubMenu;
+		MenuWidget->OnMenuHidden.BindSP(this, &FShooterMainMenu::OnMenuHidden);
 		MenuWidget->BuildAndShowMenu();
 	}
 }
@@ -100,6 +101,17 @@ void FShooterMainMenu::OnUIQuit()
 			ViewportClient->ConsoleCommand("quit");
 		}
 	}
+}
+
+void FShooterMainMenu::CloseSubMenu()
+{
+	//回退到上级菜单
+	MenuWidget->MenuGoBack();
+}
+
+void FShooterMainMenu::OnMenuHidden()
+{
+	RemoveMenuToViewport();
 }
 
 #undef LOCTEXT_NAMESPACE

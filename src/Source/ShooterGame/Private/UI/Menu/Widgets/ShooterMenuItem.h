@@ -21,6 +21,22 @@ namespace EShooterMenuItemType
 
 typedef TArray<TSharedPtr<class FShooterMenuItem>> MenuPtr;
 
+//保存菜单信息
+class FShooterMenuInfo
+{
+public:
+	MenuPtr Menu;
+	int32 SelectedIndex;
+	FText MenuTitle;
+	
+	FShooterMenuInfo(MenuPtr _Menu, int32 _SelectedIndex, FText _MenuTitle)
+	{
+		Menu = _Menu;
+		SelectedIndex = _SelectedIndex;
+		MenuTitle = _MenuTitle;
+	}
+};
+
 //加入TSharedFromThis内存管理
 class FShooterMenuItem : public TSharedFromThis<FShooterMenuItem>
 {

@@ -42,6 +42,10 @@ public:
 	ULocalPlayer* GetPlayerOwner() const;
 
 	void OnUIQuit();
+
+	void CloseSubMenu();
+
+	void OnMenuHidden();
 protected:
 	//±êÊ¶Íæ¼Ò
 	TWeakObjectPtr<ULocalPlayer> PlayerOwner;

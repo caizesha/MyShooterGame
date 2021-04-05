@@ -26,5 +26,7 @@ public:
 protected:
 	ULocalPlayer* PlayerOwner;
 
+	EWindowMode::Type bIsFullScreen;
+
 	void FullScreenOptionChanged(TSharedPtr<FShooterMenuItem> MenuItem, int32 OptionIndex);
 };
