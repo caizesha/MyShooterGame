@@ -59,7 +59,7 @@ void AShooterHUD::DrawCrosshair()
 		Canvas->DrawIcon(Crosshair[EShooterCrossHairDirection::Center], CenterX - Crosshair[EShooterCrossHairDirection::Center].UL * ScaleUI / 2,
 			CenterY - Crosshair[EShooterCrossHairDirection::Center].VL * ScaleUI / 2, ScaleUI);
 
-		Canvas->DrawIcon(Crosshair[EShooterCrossHairDirection::Left], CenterX - Crosshair[EShooterCrossHairDirection::Left].UL * ScaleUI / 2 - M *
+		Canvas->DrawIcon(Crosshair[EShooterCrossHairDirection::Left], CenterX - Crosshair[EShooterCrossHairDirection::Center].UL * ScaleUI / 2 - M *
 			ScaleUI - Crosshair[EShooterCrossHairDirection::Left].UL * ScaleUI, CenterY - Crosshair[EShooterCrossHairDirection::Left].VL * ScaleUI / 2, ScaleUI);
 
 		Canvas->DrawIcon(Crosshair[EShooterCrossHairDirection::Right], CenterX + Crosshair[EShooterCrossHairDirection::Center].UL * ScaleUI / 2 + M *
