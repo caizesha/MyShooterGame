@@ -54,6 +54,12 @@ void FShooterMainMenu::Construct(TWeakObjectPtr<UShooterGameInstance> _GameInsta
 
 		TSharedPtr<FShooterMenuItem> RootMenuItem;
 
+		TSharedPtr<FShooterMenuItem> MenuItem;
+
+		MenuItem = MenuHelper::AddMenuItem(RootMenuItem, LOCTEXT("Host", "服务器"));
+
+		MenuHelper::AddMenuItemSP<FShooterMainMenu>(MenuItem, LOCTEXT("FFA", "任意模式"), this, &FShooterMainMenu::OnUIHostFreeForAll);
+
 		MenuHelper::AddExistingMenuItem(RootMenuItem, ShooterOptions->OptionsItem.ToSharedRef());
 
 		MenuHelper::AddMenuItemSP<FShooterMainMenu>(RootMenuItem, LOCTEXT("放弃", "放弃"), this, &FShooterMainMenu::OnUIQuit);
@@ -112,6 +118,18 @@ void FShooterMainMenu::CloseSubMenu()
 void FShooterMainMenu::OnMenuHidden()
 {
 	RemoveMenuToViewport();
+}
+
+void FShooterMainMenu::OnUIHostFreeForAll()
+{
+	if (ensure(GameInstance.IsValid() && GetPlayerOwner() != NULL))
+	{
+		//创建服务器
+		FString const StartURL = TEXT("/Game/Maps/Sanctuary?game=FFA?listen?bIsLanMatch?Bots=1");
+		GameInstance->HostGame(GetPlayerOwner(), TEXT("FFA"), StartURL);
+
+		OnMenuHidden();
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

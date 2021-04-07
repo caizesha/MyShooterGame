@@ -5,6 +5,13 @@
 #include "ShooterMainMenu.h"
 #include "ShooterGameSession.h"
 
+UShooterGameInstance::UShooterGameInstance(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+	//重写构造函数，初始化当前状态
+	CurrentState = ShooterGameInstanceState::None;
+}
+
 void UShooterGameInstance::Init()
 {
 	Super::Init();
@@ -42,31 +49,24 @@ void UShooterGameInstance::StartGameInstance()
 				UEngine* const Engine = GetEngine();
 				FString Error;
 				const EBrowseReturnVal::Type BrowseResult = Engine->Browse(*WorldContext, URL, Error);
-			
-				//todo
+				//程序启动进入mainmenu状态
+				if (BrowseResult == EBrowseReturnVal::Success)
+				{
+					GotoState(ShooterGameInstanceState::MainMenu);
+				}
+				
 				return;
 			}
 		}
 	}
+
+	GotoInitialState();
 }
 
 //按固定时间调用Tick函数
 bool UShooterGameInstance::Tick(float DeltaSeconds)
 {
-	//全局变量，只初始化一次
-	static bool bExecuted = false;
-	if (!bExecuted)
-	{
-		//只初始化一次UI
-		BeginMainMenuState();
-
-		//to test 
-		FString const StartURL = TEXT("/Game/Maps/Sanctuary?game=FFA?listen?bIsLanMatch?Bots=1");
-		HostGame(GetFirstGamePlayer(), TEXT("Sanctuary"), StartURL);
-
-		bExecuted = true;
-	}
-
+	MayChangeState();
 	return true;
 }
 
@@ -79,6 +79,17 @@ void UShooterGameInstance::BeginMainMenuState()
 	ULocalPlayer* const Player = GetFirstGamePlayer();
 	MainMenuUI->Construct(this, Player);
 	MainMenuUI->AddMenuToViewport();
+}
+
+void UShooterGameInstance::EndMainMenuState()
+{
+	if (MainMenuUI.IsValid())
+	{
+		MainMenuUI->RemoveMenuToViewport();
+
+		MainMenuUI = nullptr;
+	}
+
 }
 
 bool UShooterGameInstance::HostGame(ULocalPlayer* LocalPlayer, const FString& GameType, const FString& InTravelURL)
@@ -160,4 +171,69 @@ void UShooterGameInstance::FinishSessionCreation(EOnJoinSessionCompleteResult::T
 		//出错通知
 	}
 
+}
+
+void UShooterGameInstance::MayChangeState()
+{
+	if (CurrentState != PendingState && PendingState != ShooterGameInstanceState::None)
+	{
+		FName const OldState = CurrentState;
+		EndCurrentState(PendingState);
+		BeginNewState(PendingState, OldState);
+		PendingState = ShooterGameInstanceState::None;
+	}
+}
+
+
+void UShooterGameInstance::EndCurrentState(FName NextState)
+{
+	if (CurrentState == ShooterGameInstanceState::MainMenu)
+	{
+		EndMainMenuState();
+	}
+	else if (CurrentState == ShooterGameInstanceState::Playing)
+	{
+		EndPlayingState();
+	}
+	CurrentState = ShooterGameInstanceState::None;
+}
+
+void UShooterGameInstance::BeginNewState(FName NewState, FName PreState)
+{
+	if (NewState == ShooterGameInstanceState::MainMenu)
+	{
+		BeginMainMenuState();
+	}
+	else if (NewState == ShooterGameInstanceState::Playing)
+	{
+		BeginPlayingState();
+	}
+	CurrentState = NewState;
+}
+
+
+void UShooterGameInstance::BeginPlayingState()
+{
+	//获取焦点，聚集到游戏界面中
+	FSlateApplication::Get().SetAllUserFocusToGameViewport();
+
+}
+void UShooterGameInstance::EndPlayingState()
+{
+	//todo
+}
+
+void UShooterGameInstance::GotoState(FName NewState)
+{
+	PendingState = NewState;
+}
+
+void UShooterGameInstance::GotoInitialState()
+{
+	GotoState(GetInitialState());
+}
+
+FName UShooterGameInstance::GetInitialState()
+{
+	return ShooterGameInstanceState::MainMenu;
 }

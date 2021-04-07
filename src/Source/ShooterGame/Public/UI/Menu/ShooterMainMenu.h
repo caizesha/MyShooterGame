@@ -46,6 +46,11 @@ public:
 	void CloseSubMenu();
 
 	void OnMenuHidden();
+
+protected:
+
+	void OnUIHostFreeForAll();
+
 protected:
 	//±êÊ¶Íæ¼Ò
 	TWeakObjectPtr<ULocalPlayer> PlayerOwner;
