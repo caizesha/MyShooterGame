@@ -9,6 +9,7 @@
 #include "ShooterSpectatorPawn.h"
 #include "ShooterHUD.h"
 #include "ShooterAIController.h"
+#include "ShooterGameSession.h"
 
 AShooterGameMode::AShooterGameMode()
 {
@@ -40,7 +41,7 @@ void AShooterGameMode::StartPlay()
 
 	CreateBotController();
 
-	AddBots();
+	//AddBots();//totest
 }
 
 AShooterAIController* AShooterGameMode::CreateBotController()
@@ -105,4 +106,10 @@ void AShooterGameMode::HandleMatchHasStarted()
 	Super::HandleMatchHasStarted();
 	AShooterGameState* ShooterGameState = Cast<AShooterGameState>(GameState);
 	ShooterGameState->RemainingTime = RoundTime;
+}
+
+//使用自定义的gamesession类
+TSubclassOf<AGameSession> AShooterGameMode::GetGameSessionClass() const
+{
+	return AShooterGameSession::StaticClass();
 }

@@ -15,7 +15,17 @@ public class ShooterGame : ModuleRules
                 "ShooterGame/Private/UI/Style",
                 "ShooterGame/Private/UI/Menu/Widgets",
         });
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "GameplayTasks" });
+		PublicDependencyModuleNames.AddRange(
+            new string[] 
+            {
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "InputCore",
+                "GameplayTasks",
+                "OnlineSubsystem",
+                "OnlineSubsystemUtils"
+            });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
@@ -23,7 +33,8 @@ public class ShooterGame : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		
 		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+        //仅对Private可见，静态链接库
+		//PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
 		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
 	}

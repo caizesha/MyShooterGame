@@ -34,6 +34,8 @@ public:
 
 	virtual void HandleMatchHasStarted() override;
 protected:
+	virtual TSubclassOf<AGameSession> GetGameSessionClass() const override;
+protected:
 	FTimerHandle TimeHandle_DefaultTimer;
 
 	UPROPERTY(config)
