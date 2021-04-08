@@ -24,6 +24,18 @@ AShooterWeapon::AShooterWeapon()
 	FTransform  newTransform(FRotator(0.0f, 0.0f, -90.0f));
 	WeaponMesh1P->SetRelativeTransform(newTransform);
 
+	WeaponMesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh3PComp"));
+	WeaponMesh3P->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::OnlyTickPoseWhenRendered;
+	WeaponMesh3P->CastShadow = true;
+	WeaponMesh3P->bReceivesDecals = false;
+	WeaponMesh3P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh3P->SetCollisionObjectType(ECC_WorldDynamic);
+	WeaponMesh3P->SetCollisionResponseToAllChannels(ECR_Ignore);
+	WeaponMesh3P->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
+	WeaponMesh3P->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	WeaponMesh3P->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Block);
+	WeaponMesh3P->SetupAttachment(WeaponMesh1P);
+
 	FireSound = nullptr;
 	//CurrentAmmoCount = 0;
 
@@ -69,6 +81,7 @@ void AShooterWeapon::SetPawnOwner(AShooterCharacter* pawnOwner)
 	{
 		Instigator = pawnOwner;
 		PawnOwner = pawnOwner;
+		SetOwner(pawnOwner);
 	}
 	
 }
@@ -77,12 +90,19 @@ void AShooterWeapon::AttachMeshToPawn()
 {
 	if (PawnOwner)
 	{
-		USkeletalMeshComponent* PawnMesh1p = PawnOwner->GetArmMesh();
+		USkeletalMeshComponent* PawnMesh1p = PawnOwner->GetSpecificPawnMesh(true);
 		FName attachPoint = PawnOwner->GetWeaponAttachPoint();
 		if (PawnMesh1p)
 		{
 			WeaponMesh1P->SetHiddenInGame(false);
 			WeaponMesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, attachPoint);
+		}
+
+		USkeletalMeshComponent* PawnMesh3p = PawnOwner->GetSpecificPawnMesh(false);
+		if (PawnMesh3p)
+		{
+			WeaponMesh3P->SetHiddenInGame(false);
+			WeaponMesh3P->AttachToComponent(PawnMesh3p, FAttachmentTransformRules::KeepRelativeTransform, attachPoint);
 		}
 	}
 }

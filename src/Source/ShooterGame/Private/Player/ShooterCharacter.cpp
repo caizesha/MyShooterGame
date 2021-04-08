@@ -150,9 +150,9 @@ void AShooterCharacter::MoveRight(float value)
 	}
 }
 
-USkeletalMeshComponent* AShooterCharacter::GetArmMesh()
+USkeletalMeshComponent* AShooterCharacter::GetSpecificPawnMesh(bool bWant1P) const
 {
-	return FPArm;
+	return bWant1P ? FPArm : GetMesh();
 }
 
 FName AShooterCharacter::GetWeaponAttachPoint() const
@@ -342,7 +342,7 @@ void AShooterCharacter::SetCurrentWeapon(AShooterWeapon* NewWeapon, AShooterWeap
 
 float AShooterCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
 {
-	USkeletalMeshComponent* UseMesh  = GetArmMesh();
+	USkeletalMeshComponent* UseMesh  = GetSpecificPawnMesh(true);
 	if (UseMesh && AnimMontage && UseMesh->AnimScriptInstance)
 	{
 		//获取蒙太奇动画播放时间
@@ -356,7 +356,7 @@ float AShooterCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float 
 
 void AShooterCharacter::StopAnimMontage(class UAnimMontage* AnimMontage)
 {
-	USkeletalMeshComponent* UseMesh = GetArmMesh();
+	USkeletalMeshComponent* UseMesh = GetSpecificPawnMesh(true);
 	if (UseMesh && AnimMontage && UseMesh->AnimScriptInstance)
 	{
 		return UseMesh->AnimScriptInstance->Montage_Stop(AnimMontage->BlendOut.GetBlendTime(), AnimMontage);

@@ -36,7 +36,7 @@ public:
 
 	void MoveRight(float value); 
 
-	USkeletalMeshComponent* GetArmMesh();
+	USkeletalMeshComponent* GetSpecificPawnMesh(bool bWant1P = true) const;
 
 	FName GetWeaponAttachPoint() const;
 

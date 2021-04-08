@@ -150,6 +150,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* WeaponMesh1P;
 
+	//创建第三人称武器
+	UPROPERTY(EditAnywhere, Category = "Mesh")
+	USkeletalMeshComponent* WeaponMesh3P;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName MuzzleAttachPoint;
 
