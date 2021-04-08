@@ -136,6 +136,53 @@ void SShooterMenuWidget::Construct(const FArguments& InArgs)
 
 }
 
+bool bFadedIn = false;
+void SShooterMenuWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
+{
+	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+	//界面一出现就将键盘焦点设置给该控件，界面又出现为true
+	if (!bFadedIn)
+	{
+		FSlateApplication::Get().SetKeyboardFocus(SharedThis(this));
+		bFadedIn = true;
+	}
+
+	if (bLeftMenuChanging)
+	{
+		PendingLeftMenu = NextMenu;
+
+		//更新二级菜单项
+		//如果存在三级菜单，用第一项来替换二级菜单
+		if (NextMenu.Num() > 0 && NextMenu.Top()->SubMenu.Num() > 0)
+		{
+			NextMenu = NextMenu.Top()->SubMenu;
+		}
+		else
+		{
+			NextMenu.Reset();
+		}
+		bSubMenuChanging = true;
+
+		if (CurrentMenu.Num() > 0)
+		{
+			BuildLeftPanel(bGoingBack);
+		}
+		RightBox->ClearChildren();
+
+		bLeftMenuChanging = false;
+	}
+
+	if (bSubMenuChanging)
+	{
+		//重新构建右边菜单
+		if (NextMenu.Num() > 0)
+		{
+			BuildRightPanel();
+		}
+		bSubMenuChanging = false;
+	}
+}
+
 FText SShooterMenuWidget::GetMenuTitle() const
 {
 	return CurrentMenuTitle;
@@ -160,6 +207,8 @@ void SShooterMenuWidget::BuildAndShowMenu()
 			BuildRightPanel();
 		}
 	}
+
+	bFadedIn = false;
 }
 
 void SShooterMenuWidget::BuildLeftPanel(bool bGoingBack)
@@ -307,54 +356,6 @@ FMargin SShooterMenuWidget::GetMenuOffset() const
 
 	FMargin Result(OffsetX, OffsetY, 0, 0);
 	return Result;
-}
-
-//界面一出现就将键盘焦点设置给该控件
-bool bFadedIn = false;//界面又出现
-void SShooterMenuWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
-{
-	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
-
-	if (!bFadedIn)
-	{
-		FSlateApplication::Get().SetKeyboardFocus(SharedThis(this));
-		bFadedIn = true;
-	}
-
-	if (bLeftMenuChanging)
-	{
-		PendingLeftMenu = NextMenu;
-
-		//更新二级菜单项
-		//如果存在三级菜单，用第一项来替换二级菜单
-		if (NextMenu.Num() > 0 && NextMenu.Top()->SubMenu.Num() > 0)
-		{
-			NextMenu = NextMenu.Top()->SubMenu;
-		}
-		else
-		{
-			NextMenu.Reset();
-		}
-		bSubMenuChanging = true;
-
-		if (CurrentMenu.Num() > 0)
-		{
-			BuildLeftPanel(bGoingBack);
-		}
-		RightBox->ClearChildren();
-
-		bLeftMenuChanging = false;
-	}
-
-	if (bSubMenuChanging)
-	{
-		//重新构建右边菜单
-		if (NextMenu.Num() > 0)
-		{
-			BuildRightPanel();
-		}
-		bSubMenuChanging = false;
-	}
 }
 
 //当键盘焦点设置到此控件时，系统将发送事件给此控件

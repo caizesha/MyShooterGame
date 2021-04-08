@@ -38,6 +38,10 @@ public:
 	//url地址可以附带很多参数
 	bool HostGame(ULocalPlayer* LocalPlayer, const FString& GameType, const FString& InTravelURL);
 
+	bool FindSessions(ULocalPlayer* LocalPlayer, bool bIsLanMatch);
+
+	bool JoinSession(ULocalPlayer* LocalPlayer, int32 SessionIndexInSearchResults);
+
 	AShooterGameSession* GetGameSession() const; 
 
 	void GotoState(FName NewState);
@@ -50,9 +54,19 @@ private:
 
 	void OnCreatePresenceSessionComplete(FName InSessionName, bool bWasSuccessfull);
 
+	//针对服务器
 	void OnRegisterLocalPlayerComplete(const FUniqueNetId& PlayerId, EOnJoinSessionCompleteResult::Type Result);
 	
 	void FinishSessionCreation(EOnJoinSessionCompleteResult::Type Result);
+
+	void OnSearchSessionsComplete(bool bWasSuccessfull);
+
+	void OnJoinSessionComplete(EOnJoinSessionCompleteResult::Type Result);
+
+	//针对客户端
+	void OnRegisterJoiningLocalPlayerComplete(const FUniqueNetId& PlayerId, EOnJoinSessionCompleteResult::Type Result);
+
+	void FinishJoinSession(EOnJoinSessionCompleteResult::Type Result);
 
 	//检测当前状态是否发生变化
 	void MayChangeState();
@@ -63,14 +77,28 @@ private:
 	void BeginPlayingState();
 	void EndPlayingState();
 
+	//加载前端地图
+	bool LoadFrontEndMap(const FString& MapName);
+
+	void InternalTravelToSession(const FName& InSessionName);
+
+	void CleanupSession();
+
+	void OnEndSessionComplete(FName InSessionName, bool bWasSuccessfull);
+
 	TSharedPtr<FShooterMainMenu> MainMenuUI;
 
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
+	FOnEndSessionCompleteDelegate OnEndSessionCompleteDelegate;
 
 	FString TravelURL;
 
 	FDelegateHandle OnCreatePresenceSessionCompleteDelegateHandle;
+	FDelegateHandle OnSearchSessionsCompleteDelegateHandle;
+	FDelegateHandle OnJoinSessionCompleteDelegateHandle;
+	FDelegateHandle OnEndSessionCompleteDelegateHandle;
+	FDelegateHandle OnDestroySessionCompleteDelegateHandle;
 
 	UPROPERTY(config)
 	FString MainMenuMap;

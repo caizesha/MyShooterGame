@@ -33,6 +33,8 @@ public:
 	virtual void PreInitializeComponents() override;
 
 	virtual void HandleMatchHasStarted() override;
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 protected:
 	virtual TSubclassOf<AGameSession> GetGameSessionClass() const override;
 protected:

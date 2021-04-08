@@ -108,6 +108,18 @@ void AShooterGameMode::HandleMatchHasStarted()
 	ShooterGameState->RemainingTime = RoundTime;
 }
 
+void AShooterGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	AShooterPlayerController* NewPC = Cast<AShooterPlayerController>(NewPlayer);
+	//通知客户端可以开始startsession
+	if (NewPC && IsMatchInProgress())
+	{
+		NewPC->ClientStartOnlineGame();
+	}
+
+}
+
 //使用自定义的gamesession类
 TSubclassOf<AGameSession> AShooterGameMode::GetGameSessionClass() const
 {

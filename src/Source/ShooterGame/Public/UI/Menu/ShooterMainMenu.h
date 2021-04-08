@@ -15,6 +15,18 @@ class SShooterMenuWidget;
 
 class FShooterMenuItem;
 
+class AShooterGameSession;
+
+struct FServerEntry
+{
+	FString ServerName;
+	FString CurrentPlayers;
+	FString MaxPlayers;
+	FString GameType;
+	FString MapName;
+	FString Ping;
+	int32 SearchResultsIndex;
+};
 
 //管理菜单的中间类：负责菜单的创建、显示、隐藏
 class SHOOTERGAME_API FShooterMainMenu : public TSharedFromThis<FShooterMainMenu>, public FTickableGameObject
@@ -47,10 +59,22 @@ public:
 
 	void OnMenuHidden();
 
+	AShooterGameSession* GetGameSession() const;
+
+	//轮询
+	void UpdateSearchStatus();
+
 protected:
 
 	void OnUIHostFreeForAll();
 
+	void OnSearchServer();
+
+	void OnServerSearchFinished();
+
+	void OnJoinGame();
+
+	void ConnentToServer();
 protected:
 	//标识玩家
 	TWeakObjectPtr<ULocalPlayer> PlayerOwner;
@@ -63,4 +87,11 @@ protected:
 	TSharedPtr<class SWeakWidget> MenuWidgetContainer;
 
 	TSharedPtr<FShooterOptions> ShooterOptions;
+
+	//可用服务器列表
+	TArray<TSharedPtr<FServerEntry>> ServerList;
+
+	bool bSearchForServers;
+
+	TSharedPtr<FServerEntry> SelectedServer;
 };

@@ -12,3 +12,11 @@ public:
 	FShooterOnlineSessionSettings(bool bIsLan = false, bool bIsPresence = false, int32 MaxNumPlayers = 4);
 	~FShooterOnlineSessionSettings();
 };
+
+class FShooterOnlineSearchSettings : public FOnlineSessionSearch
+{
+public:
+	//bSearchingPresence:是否搜寻公开出来的
+	FShooterOnlineSearchSettings(bool bSearchingLan = false, bool bSearchingPresence = false);
+	~FShooterOnlineSearchSettings();
+};

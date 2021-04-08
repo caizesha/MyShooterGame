@@ -29,3 +29,20 @@ FShooterOnlineSessionSettings::FShooterOnlineSessionSettings(bool bIsLan, bool b
 FShooterOnlineSessionSettings::~FShooterOnlineSessionSettings()
 {
 }
+
+FShooterOnlineSearchSettings::FShooterOnlineSearchSettings(bool bSearchingLan, bool bSearchingPresence)
+{
+	bIsLanQuery = bSearchingLan;
+	MaxSearchResults = 10;
+	PingBucketSize = 50;
+
+	if (bSearchingPresence)
+	{
+		QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	}
+
+}
+FShooterOnlineSearchSettings::~FShooterOnlineSearchSettings()
+{
+
+}

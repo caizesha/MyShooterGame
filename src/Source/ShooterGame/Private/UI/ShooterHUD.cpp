@@ -86,6 +86,10 @@ void AShooterHUD::DrawHealth()
 	Canvas->DrawIcon(HealthBarBg, HealthPosX, HealthPosY, ScaleUI);
 
 	AShooterCharacter* MyPawn = Cast<AShooterCharacter>(GetOwningPawn());
+	if (MyPawn == nullptr)
+	{
+		return;
+	}
 	const float HealthAmount = FMath::Min(1.0f,(float)MyPawn->GetCurrentHealth() / MyPawn->GetMaxHealth());
 	
 	FCanvasTileItem TileItem(FVector2D(HealthPosX, HealthPosY), HealthBar.Texture->Resource,
@@ -175,7 +179,14 @@ void AShooterHUD::DrawWeaponHUD()
 	const float PriClipPosY = Canvas->ClipY - Canvas->OrgY - (PriWeaponOffsetY + offset + (PrimaryWeaponIcon.VL + PrimaryClipIcon.VL) / 2)*ScaleUI;
 
 	AShooterCharacter* MyPawn = Cast<AShooterCharacter>(GetOwningPawn());
+	
+	if (MyPawn == nullptr)
+	{
+		return;
+	}
+
 	AShooterWeapon* Weapon = MyPawn->GetCurrentWeapon();
+
 	if (MyPawn&&Weapon)
 	{
 		//绘制背景三角部分
