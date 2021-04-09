@@ -30,6 +30,8 @@ public:
 
 	virtual void PostInitializeComponents() override;
 
+	bool IsFirstPerson() const;
+
 	void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation);
 	//process character's move
 	void MoveForward(float value);
@@ -99,6 +101,8 @@ protected:
 	UPROPERTY(Transient)
 	TArray<AShooterWeapon*> Inventory;
 
+	//同步枪
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_CurrentWeapon)
 	AShooterWeapon* CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
@@ -112,4 +116,8 @@ protected:
 	void EquipWeapon(AShooterWeapon* weapon);
 
 	void SetCurrentWeapon(AShooterWeapon* NewWeapon, AShooterWeapon* LastWeapon);
+
+	//响应换枪，参数由系统自己传递
+	UFUNCTION()
+	void OnRep_CurrentWeapon(AShooterWeapon* LastWeapon);
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine.h"
+#include "Net/UnrealNetwork.h"
 
 //自定义碰撞通道
 #define COLLISION_WEAPON ECC_GameTraceChannel1

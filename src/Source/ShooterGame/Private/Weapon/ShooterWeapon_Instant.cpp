@@ -27,7 +27,7 @@ void AShooterWeapon_Instant::FireWeapon()
 
 	//获取子弹发射位置
 	const float WeaponRange = InstantConfig.WeaponRange;
-	const FVector StartTrace = GetMuzzleLocation();
+	const FVector StartTrace = GetCameraDamageStartLocation(AimDir);
 	const FVector EndTrace = StartTrace + ShooterDirection * WeaponRange;
 	//获取伤害对象
 	const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
@@ -47,8 +47,20 @@ void AShooterWeapon_Instant::ProcessInstantHit(const FHitResult& Impact, const F
 
 void AShooterWeapon_Instant::ProcessInstantHit_Confirm(const FHitResult& Impact, const FVector& Origin, const FVector& ShootDir, int32 RandomSeed, float ReticleSpread)
 {
-	//生命值处理
-	DealDamage(Impact,ShootDir);
+	//确保只由服务器/单机版计算伤害
+	if (ShouldDealDamage(Impact.GetActor()))
+	{
+		//生命值处理
+		DealDamage(Impact,ShootDir);
+	}
+
+	//服务器通知客户端
+	if (Role == ROLE_Authority)
+	{
+		HitNotify.Origin = Origin;
+		HitNotify.RandomSeed = RandomSeed;
+		HitNotify.ReticleSpread = ReticleSpread;
+	}
 
 	/*生成武器特效*/
 	const FVector EndTrace = Origin + ShootDir * InstantConfig.WeaponRange;
@@ -100,4 +112,47 @@ void AShooterWeapon_Instant::SpawnImpactEffect(const FHitResult& Impact)
 		}
 	}
 
+}
+
+//传递碰撞信息，以通知客户端，使其模拟开火粒子特效
+void AShooterWeapon_Instant::OnRep_HitNotify()
+{
+	SimulateInstantHit(HitNotify.Origin, HitNotify.ReticleSpread, HitNotify.RandomSeed);
+}
+
+void AShooterWeapon_Instant::SimulateInstantHit(const FVector& ShootOrigin, float ReticleSpread, int32 RandomSeed)
+{
+	FRandomStream WeaponRandomStream(RandomSeed);
+	//计算圆锥半角
+	const float ConeHalfAngle = FMath::DegreesToRadians(ReticleSpread / 2.0f);
+	//获取瞄准方向，生成子弹随机发射方向
+	const FVector AimDir = GetAdjustAim();
+	FVector ShooterDirection = WeaponRandomStream.VRandCone(AimDir, ConeHalfAngle, ConeHalfAngle);
+
+	//获取子弹发射位置
+	const float WeaponRange = InstantConfig.WeaponRange;
+	const FVector StartTrace = ShootOrigin;
+	const FVector EndTrace = StartTrace + ShooterDirection * WeaponRange;
+	//获取伤害对象
+	const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
+
+	//有碰撞到
+	if (Impact.bBlockingHit)
+	{
+		SpawnImpactEffect(Impact);
+		SpawnTrailEffect(Impact.ImpactPoint);
+	}
+	else
+	{
+		SpawnTrailEffect(EndTrace);
+	}
+}
+
+//获取生命周期同步属性，该函数由系统调用
+void AShooterWeapon_Instant::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//条件同步：跳过Owner的复制
+	DOREPLIFETIME_CONDITION(AShooterWeapon_Instant, HitNotify, COND_SkipOwner);
 }

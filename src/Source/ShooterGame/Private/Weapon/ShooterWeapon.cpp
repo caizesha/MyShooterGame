@@ -53,6 +53,13 @@ AShooterWeapon::AShooterWeapon()
 	CurrentAmmoInClip = 0;
 
 	bPlayingFireAnim = false;
+
+	//设置枪的远程角色
+	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
+	//打开同步开关
+	bReplicates = true;
+	//计算网络相关性
+	bNetUseOwnerRelevancy = true;
 }
 
 // Called when the game starts or when spawned
@@ -83,7 +90,6 @@ void AShooterWeapon::SetPawnOwner(AShooterCharacter* pawnOwner)
 		PawnOwner = pawnOwner;
 		SetOwner(pawnOwner);
 	}
-	
 }
 
 void AShooterWeapon::AttachMeshToPawn()
@@ -111,6 +117,10 @@ void AShooterWeapon::DetachMeshFromPawn()
 {
 	WeaponMesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 	WeaponMesh1P->SetHiddenInGame(true);
+
+	//补充第三人称武器的卸载逻辑
+	WeaponMesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	WeaponMesh3P->SetHiddenInGame(true);
 }
 //获取子弹发射方向
 FVector AShooterWeapon::GetAdjustAim()
@@ -146,6 +156,11 @@ void AShooterWeapon::FireWeapon() {}
 
 void AShooterWeapon::StartFire()
 {
+	//客户端：通知服务端执行
+	if (Role < ROLE_Authority)
+	{
+		ServerStartFire();
+	}
 	if (!bWantToFire)
 	{
 		bWantToFire = true;
@@ -156,14 +171,68 @@ void AShooterWeapon::StartFire()
 	//FireWeapon();
 }
 
+bool AShooterWeapon::ServerStartFire_Validate()
+{
+	return true;
+}
+
+void AShooterWeapon::ServerStartFire_Implementation()
+{
+	StartFire();
+}
+
 void AShooterWeapon::StopFire()
 {
+	//客户端：通知服务端执行
+	if (Role < ROLE_Authority)
+	{
+		ServerStopFire();
+	}
 	if (bWantToFire)
 	{
 		bWantToFire = false;
 		DetermineWeaponState();
 		HandleDependCurrentState();
 	}
+}
+
+bool AShooterWeapon::ServerStopFire_Validate()
+{
+	return true;
+}
+
+void AShooterWeapon::ServerStopFire_Implementation()
+{
+	StopFire();
+}
+
+//服务器开火，通知客户端模拟开火
+void AShooterWeapon::OnRep_Fire()
+{
+	if (bWantToFire)
+	{
+		SimulateWeaponFire();
+	}
+	else
+	{
+		StopSimulateWeaponFire();
+	}
+
+}
+
+//确保只由服务器计算伤害值
+bool AShooterWeapon::ShouldDealDamage(AActor* TestActor) const
+{
+	if (TestActor)
+	{
+		if (GetNetMode() != NM_Client || TestActor->Role == ROLE_Authority || TestActor->bTearOff)
+
+		{
+			return true;
+		}
+		
+	}
+	return false;
 }
 
 void AShooterWeapon::SimulateWeaponFire()
@@ -211,29 +280,16 @@ UAudioComponent* AShooterWeapon::PlayWeaponSound(USoundCue *Sound)
 	return AudioComp;
 }
 
-
-FVector AShooterWeapon::GetMuzzleLocation()
+USkeletalMeshComponent* AShooterWeapon::GetWeaponMesh() const
 {
-	if (WeaponMesh1P)
-	{
-		return WeaponMesh1P->GetSocketLocation(MuzzleAttachPoint);
-	}
-	else
-	{
-		return FVector();
-	}
+	return (PawnOwner != NULL && PawnOwner->IsFirstPerson()) ? WeaponMesh1P : WeaponMesh3P;
 }
-//
-//int AShooterWeapon::GetCurrentAmmoCount()
-//{
-//	return CurrentAmmoCount;
-//}
-//
-//
-//int AShooterWeapon::GetMaxAmmoCount()
-//{
-//	return GetClass()->GetDefaultObject<AShooterWeapon>()->CurrentAmmoCount;
-//}
+
+FVector AShooterWeapon::GetMuzzleLocation() const
+{
+	USkeletalMeshComponent* UseMesh = GetWeaponMesh();
+	return UseMesh->GetSocketLocation(MuzzleAttachPoint);
+}
 
 //确定武器所处状态
 void AShooterWeapon::DetermineWeaponState()
@@ -487,9 +543,13 @@ void AShooterWeapon::HandleFiring()
 	else
 	{
 		SimulateWeaponFire();
-		FireWeapon();
-		//更新子弹数量
-		UsedAmmo();
+		//只让本地控制的玩家触发该逻辑
+		if (PawnOwner && PawnOwner->IsLocallyControlled())
+		{
+			FireWeapon();
+			//更新子弹数量
+			UsedAmmo();
+		}
 	}
 
 	if (CurrentAmmoInClip <= 0 && CanReload())
@@ -526,6 +586,29 @@ void AShooterWeapon::UsedAmmo()
 {
 	CurrentAmmo--;
 	CurrentAmmoInClip--;
+}
+
+//相机伤害位置调整
+FVector AShooterWeapon::GetCameraDamageStartLocation(const FVector& AimDir) const
+{
+	AShooterPlayerController* PC = PawnOwner ? Cast<AShooterPlayerController>(PawnOwner->Controller) : NULL;
+	AShooterAIController* AIPC = PawnOwner ? Cast<AShooterAIController>(PawnOwner->Controller) : NULL;
+	FVector OutStartTrace = FVector::ZeroVector;
+
+	if (PC)
+	{
+		// use player's camera
+		FRotator UnuseRot;//不使用
+		PC->GetPlayerViewPoint(OutStartTrace, UnuseRot);
+		
+		// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
+		OutStartTrace = OutStartTrace + AimDir * ((Instigator->GetActorLocation() - OutStartTrace) | AimDir);
+	}
+	else if (AIPC)
+	{
+		OutStartTrace = GetMuzzleLocation();
+	}
+	return OutStartTrace;
 }
 
 FHitResult AShooterWeapon::WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const
@@ -605,4 +688,13 @@ void AShooterWeapon::StopMontageAnimation(const FWeaponAnim& Animation)
 			PawnOwner->StopAnimMontage(UseAnim);
 		}
 	}
+}
+
+//获取生命周期同步属性，该函数由系统调用
+void AShooterWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//条件同步：跳过Owner的复制
+	DOREPLIFETIME_CONDITION(AShooterWeapon, bWantToFire, COND_SkipOwner);
 }

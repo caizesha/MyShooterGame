@@ -66,12 +66,24 @@ protected:
 	virtual void BeginPlay() override;
 
 	void OnEquipFinished();
+
+	//客户端开火通知服务器
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStartFire();
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStopFire();
+
+	UFUNCTION()
+	void OnRep_Fire();
+
+	bool ShouldDealDamage(AActor* TestActor) const;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void SetPawnOwner(AShooterCharacter* pawnOwner);
-	
+
 	void AttachMeshToPawn();
 
 	void DetachMeshFromPawn();
@@ -81,7 +93,9 @@ public:
 
 	virtual void FireWeapon();
 
-	FVector GetMuzzleLocation();
+	USkeletalMeshComponent* GetWeaponMesh()const;
+
+	FVector GetMuzzleLocation() const;
 
 	void StartFire();
 
@@ -138,6 +152,9 @@ public:
 	int32 GetAmmoPerClip() const;
 
 	void UsedAmmo();
+
+	//相机伤害位置调整算法
+	FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
 
 	FHitResult WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const;
 
@@ -202,7 +219,11 @@ private:
 	bool bIsEquiped;
 	//是否需要装子弹
 	bool bPendingReload;
+	
+	//设置同步属性
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_Fire)
 	bool bWantToFire;
+	
 	bool bPendingEquip;
 	bool bRefiring;
 

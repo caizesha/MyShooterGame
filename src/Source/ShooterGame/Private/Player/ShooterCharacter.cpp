@@ -97,8 +97,16 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	//改写，枪只在服务器产生，同步到客户端;Role定义在actor里面
+	if (Role == ROLE_Authority)
+	{
+		SpawnDefaultInventory();
+	}
+}
 
-	SpawnDefaultInventory();
+bool AShooterCharacter::IsFirstPerson() const
+{
+	return IsAlive() && Controller!=NULL && Controller->IsLocalPlayerController();
 }
 
 void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
@@ -203,8 +211,10 @@ void AShooterCharacter::OnStartFire()
 
 void AShooterCharacter::OnStopFire()
 {
-	CurrentWeapon->StopFire();
-
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StopFire();
+	}
 }
 
 float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -255,6 +265,12 @@ void AShooterCharacter::OnReload()
 
 void AShooterCharacter::SpawnDefaultInventory()
 {
+	//安全检测，防止本函数被其他地方调用
+	if (Role < ROLE_Authority)
+	{
+		return;
+	}
+
 	int32 NumWeaponClasses = DefaultInventoryClass.Num();
 	for (int i = 0; i < NumWeaponClasses; i++)
 	{
@@ -362,4 +378,18 @@ void AShooterCharacter::StopAnimMontage(class UAnimMontage* AnimMontage)
 		return UseMesh->AnimScriptInstance->Montage_Stop(AnimMontage->BlendOut.GetBlendTime(), AnimMontage);
 	}
 
+}
+
+void AShooterCharacter::OnRep_CurrentWeapon(AShooterWeapon* LastWeapon)
+{
+	SetCurrentWeapon(CurrentWeapon, LastWeapon);
+}
+
+//获取生命周期同步属性，该函数由系统调用
+void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//收集改写的属性，属性会在所有的客户端连接里面同步
+	DOREPLIFETIME(AShooterCharacter, CurrentWeapon);
 }

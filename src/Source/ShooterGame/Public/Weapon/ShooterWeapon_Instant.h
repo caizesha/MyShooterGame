@@ -8,7 +8,24 @@
 /**
  * 
  */
+//定义客户端碰撞信息
+USTRUCT()
+struct FInstantHitInfo
+{
+	GENERATED_USTRUCT_BODY()
+	
+	UPROPERTY()
+	FVector Origin;
 
+	UPROPERTY()
+	float ReticleSpread;
+
+	UPROPERTY()
+	int32 RandomSeed;
+};
+
+
+//及时伤害武器的配置
 USTRUCT()
 struct FInstantWeaponData
 {
@@ -45,7 +62,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TSubclassOf<class AShooterImpactEffect> ImpactTemplate;
-	
+
+	//定义同步变量
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_HitNotify)
+	FInstantHitInfo HitNotify;
+
+protected:
+	UFUNCTION()
+	void OnRep_HitNotify();
+
+	void SimulateInstantHit(const FVector& ShootOrigin, float ReticleSpread,int32 RandomSeed);
 public:
 	void FireWeapon();
 
@@ -62,5 +88,4 @@ public:
 
 	//击中火花特效
 	void SpawnImpactEffect(const FHitResult& Impact);
-
 };
