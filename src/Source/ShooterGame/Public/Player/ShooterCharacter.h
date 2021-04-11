@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "TakeHitInfo.h"
 #include "GameFramework/Character.h"
 #include "ShooterCharacter.generated.h"
 
@@ -113,6 +114,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float Health;
 
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_LastTakenHitInfo)
+	struct FTakeHitInfo LastTakeHitInfo;
+
 	void EquipWeapon(AShooterWeapon* weapon);
 
 	void SetCurrentWeapon(AShooterWeapon* NewWeapon, AShooterWeapon* LastWeapon);
@@ -120,4 +124,14 @@ protected:
 	//响应换枪，参数由系统自己传递
 	UFUNCTION()
 	void OnRep_CurrentWeapon(AShooterWeapon* LastWeapon);
+
+
+	//同步伤害
+	virtual void PlayHit(float DamageTaken, struct FDamageEvent const & DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser);
+
+	//同步伤害到客户端
+	void ReplicateHit(float DamageTaken, struct FDamageEvent const & DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser, bool bKilled);
+	
+	UFUNCTION()
+	void OnRep_LastTakenHitInfo();
 };

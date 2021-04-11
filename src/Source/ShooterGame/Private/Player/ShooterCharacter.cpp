@@ -217,14 +217,54 @@ void AShooterCharacter::OnStopFire()
 	}
 }
 
-float AShooterCharacter::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+float AShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	if (ActualDamage > 0.0) {
 		Health -= ActualDamage;
+		if (Health > 0)
+		{
+			PlayHit(ActualDamage, DamageEvent, EventInstigator ? EventInstigator->GetPawn() : NULL, DamageCauser);
+		}
 	}
 	return ActualDamage;
 }
+
+void AShooterCharacter::PlayHit(float DamageTaken, struct FDamageEvent const & DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
+{
+	//由服务器同步到其他客户端
+	//还需判断敌人是否死亡 todo
+	if (Role == ROLE_Authority)
+	{
+		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
+	}
+
+	//应用冲击动量
+	if (DamageTaken > 0.f)
+	{
+		ApplyDamageMomentum(DamageTaken, DamageEvent, PawnInstigator, DamageCauser);
+	}
+}
+
+void AShooterCharacter::ReplicateHit(float DamageTaken, struct FDamageEvent const & DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser, bool bKilled)
+{
+	//收集lasttakenhit同步信息
+	LastTakeHitInfo.ActualDamage = DamageTaken;
+	LastTakeHitInfo.PawnInstigator = Cast<AShooterCharacter>(PawnInstigator);
+	LastTakeHitInfo.DamageCauser = DamageCauser;
+	LastTakeHitInfo.SetDamageEvent(DamageEvent);
+	LastTakeHitInfo.bKilled = bKilled;
+}
+
+//客户端响应
+void AShooterCharacter::OnRep_LastTakenHitInfo()
+{
+	if (!LastTakeHitInfo.bKilled)
+	{
+		PlayHit(LastTakeHitInfo.ActualDamage, LastTakeHitInfo.GetDamageEvent(), LastTakeHitInfo.PawnInstigator.Get(), LastTakeHitInfo.DamageCauser.Get());
+	}
+}
+
 int32 AShooterCharacter::GetCurrentHealth() const
 {
 	return Health;
@@ -392,4 +432,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	//收集改写的属性，属性会在所有的客户端连接里面同步
 	DOREPLIFETIME(AShooterCharacter, CurrentWeapon);
+	DOREPLIFETIME(AShooterCharacter, LastTakeHitInfo);
+
 }
