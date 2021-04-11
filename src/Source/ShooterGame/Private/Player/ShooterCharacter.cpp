@@ -367,7 +367,15 @@ void AShooterCharacter::EquipWeapon(AShooterWeapon* weapon)
 {
 	if (weapon)
 	{
-		SetCurrentWeapon(weapon, CurrentWeapon);
+		if (Role == ROLE_Authority)
+		{
+			SetCurrentWeapon(weapon, CurrentWeapon);
+		}
+		
+		else
+		{
+			ServerEquipWeapon(weapon);
+		}
 	}
 }
 
@@ -399,7 +407,8 @@ void AShooterCharacter::SetCurrentWeapon(AShooterWeapon* NewWeapon, AShooterWeap
 
 float AShooterCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
 {
-	USkeletalMeshComponent* UseMesh  = GetSpecificPawnMesh(true);
+	USkeletalMeshComponent* UseMesh = IsFirstPerson() ? GetSpecificPawnMesh(true) : GetSpecificPawnMesh(false);
+	//能拿到动画蓝图实例
 	if (UseMesh && AnimMontage && UseMesh->AnimScriptInstance)
 	{
 		//获取蒙太奇动画播放时间
@@ -413,7 +422,7 @@ float AShooterCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float 
 
 void AShooterCharacter::StopAnimMontage(class UAnimMontage* AnimMontage)
 {
-	USkeletalMeshComponent* UseMesh = GetSpecificPawnMesh(true);
+	USkeletalMeshComponent* UseMesh = IsFirstPerson() ? GetSpecificPawnMesh(true) : GetSpecificPawnMesh(false);
 	if (UseMesh && AnimMontage && UseMesh->AnimScriptInstance)
 	{
 		return UseMesh->AnimScriptInstance->Montage_Stop(AnimMontage->BlendOut.GetBlendTime(), AnimMontage);
@@ -426,6 +435,17 @@ void AShooterCharacter::OnRep_CurrentWeapon(AShooterWeapon* LastWeapon)
 	SetCurrentWeapon(CurrentWeapon, LastWeapon);
 }
 
+
+bool AShooterCharacter::ServerEquipWeapon_Validate(AShooterWeapon* NewWeapon)
+{
+	return true;
+}
+
+void AShooterCharacter::ServerEquipWeapon_Implementation(AShooterWeapon* NewWeapon)
+{
+	EquipWeapon(NewWeapon);
+}
+
 //获取生命周期同步属性，该函数由系统调用
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -435,5 +455,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(AShooterCharacter, CurrentWeapon);
 	DOREPLIFETIME(AShooterCharacter, LastTakeHitInfo);
 	DOREPLIFETIME(AShooterCharacter, Health);
+	DOREPLIFETIME_CONDITION(AShooterCharacter, Inventory, COND_OwnerOnly);//只同步到owner
 
 }

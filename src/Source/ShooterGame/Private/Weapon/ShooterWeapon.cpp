@@ -675,7 +675,7 @@ float AShooterWeapon::PlayMontageAnimation(const FWeaponAnim& Animation)
 	float Duration = 0.0f;
 	if (PawnOwner)
 	{
-		UAnimMontage*  UseAnim = Animation.Pawn1P;
+		UAnimMontage*  UseAnim = PawnOwner->IsFirstPerson() ? Animation.Pawn1P : Animation.Pawn3P;
 		if (UseAnim)
 		{
 			Duration = PawnOwner->PlayAnimMontage(UseAnim);
@@ -688,7 +688,7 @@ void AShooterWeapon::StopMontageAnimation(const FWeaponAnim& Animation)
 {
 	if(PawnOwner)
 	{
-		UAnimMontage*  UseAnim = Animation.Pawn1P;
+		UAnimMontage*  UseAnim = PawnOwner->IsFirstPerson() ? Animation.Pawn1P : Animation.Pawn3P;
 		if (UseAnim)
 		{
 			PawnOwner->StopAnimMontage(UseAnim);

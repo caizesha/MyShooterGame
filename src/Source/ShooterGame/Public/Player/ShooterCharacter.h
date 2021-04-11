@@ -99,7 +99,7 @@ protected:
 	TArray<TSubclassOf<AShooterWeapon>> DefaultInventoryClass;
 	//定义背包数组容器，存储武器对象
 	//程序运行时创建，是不需要存储的临时数据
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, Replicated)
 	TArray<AShooterWeapon*> Inventory;
 
 	//同步枪
@@ -126,7 +126,6 @@ protected:
 	UFUNCTION()
 	void OnRep_CurrentWeapon(AShooterWeapon* LastWeapon);
 
-
 	//同步伤害
 	virtual void PlayHit(float DamageTaken, struct FDamageEvent const & DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser);
 
@@ -135,4 +134,7 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_LastTakenHitInfo();
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerEquipWeapon(AShooterWeapon* NewWeapon);
 };
