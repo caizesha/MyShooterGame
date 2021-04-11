@@ -43,6 +43,24 @@ struct FInstantWeaponData
 
 	UPROPERTY(EditDefaultsOnly, Category = "WeaponState")
 	int32 HitDamage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "HitVerification")
+	float AllowedViewDotHitDir;
+
+	//允许的由于服务器延迟导致的偏差值
+	UPROPERTY(EditDefaultsOnly, Category = "HitVerification")
+	float ClientSideHitLeeWay;
+
+	FInstantWeaponData()
+	{
+		WeaponSpread = 5.0f;
+		WeaponRange = 10000.0f;
+		HitDamage = 10;
+		DamageType = UDamageType::StaticClass();
+		AllowedViewDotHitDir = 0.8f;
+		ClientSideHitLeeWay = 200.0f;
+	}
+	
 };
 
 UCLASS()
@@ -68,6 +86,9 @@ protected:
 	FInstantHitInfo HitNotify;
 
 protected:
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerNotifyHit(const FHitResult& Impact, const FVector_NetQuantizeNormal& ShootDir, int32 RandomSeed, float ReticleSpread);
+
 	UFUNCTION()
 	void OnRep_HitNotify();
 

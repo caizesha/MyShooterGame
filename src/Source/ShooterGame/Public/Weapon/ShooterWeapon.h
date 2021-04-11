@@ -50,6 +50,9 @@ struct FWeaponAnim
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* Pawn1P;
 
+	//添加第三人称开火动画资源
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* Pawn3P;
 };
 
 UCLASS()
@@ -214,6 +217,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TSubclassOf<UCameraShake> FireCameraShake;
+
+	EWeaponState::Type CurrentState;
 private:
 	
 	bool bIsEquiped;
@@ -226,8 +231,6 @@ private:
 	
 	bool bPendingEquip;
 	bool bRefiring;
-
-	EWeaponState::Type CurrentState;
 
 	EWeaponState::Type PreState;
 

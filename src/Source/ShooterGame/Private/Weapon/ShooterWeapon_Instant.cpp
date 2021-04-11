@@ -41,6 +41,20 @@ void AShooterWeapon_Instant::FireWeapon()
 
 void AShooterWeapon_Instant::ProcessInstantHit(const FHitResult& Impact, const FVector& Origin, const FVector& ShootDir, int32 RandomSeed, float ReticleSpread)
 {
+	if (PawnOwner && PawnOwner->IsLocallyControlled() && GetNetMode() == NM_Client)
+	{
+		if (Impact.GetActor() && Impact.GetActor()->GetRemoteRole() == ROLE_Authority)
+		{
+			ServerNotifyHit(Impact, ShootDir, RandomSeed, ReticleSpread);
+		}
+		else if (Impact.GetActor() == NULL)
+		{
+			if (Impact.bBlockingHit)
+			{
+				ServerNotifyHit(Impact, ShootDir, RandomSeed, ReticleSpread);
+			}
+		}
+	}
 	ProcessInstantHit_Confirm(Impact, Origin, ShootDir, RandomSeed, ReticleSpread);
 }
 
@@ -112,6 +126,70 @@ void AShooterWeapon_Instant::SpawnImpactEffect(const FHitResult& Impact)
 		}
 	}
 
+}
+
+bool AShooterWeapon_Instant::ServerNotifyHit_Validate(const FHitResult& Impact, const FVector_NetQuantizeNormal& ShootDir, int32 RandomSeed, float ReticleSpread)
+{
+	return true;
+}
+
+void AShooterWeapon_Instant::ServerNotifyHit_Implementation(const FHitResult& Impact, const FVector_NetQuantizeNormal& ShootDir, int32 RandomSeed, float ReticleSpread)
+{
+	const float WeaponAngleDot = FMath::Abs(FMath::Sin(ReticleSpread*PI / 180.0f));
+	if (Instigator && (Impact.GetActor() || Impact.bBlockingHit))
+	{
+		const FVector Origin = GetMuzzleLocation();
+		const FVector ViewDir = (Impact.Location - Origin).GetSafeNormal();
+
+		//获取余弦值
+		const float ViewDotHitDir = FVector::DotProduct(Instigator->GetViewRotation().Vector(), ViewDir);
+		if (ViewDotHitDir > InstantConfig.AllowedViewDotHitDir - WeaponAngleDot)//枪没有插入mesh，可以正常射击
+		{
+			if (CurrentState != EWeaponState::Idle)
+			{
+				//射击到墙壁
+				if (Impact.GetActor() == NULL)
+				{
+					if (Impact.bBlockingHit)
+					{
+						ProcessInstantHit_Confirm(Impact, Origin, ShootDir, RandomSeed, ReticleSpread);
+					}
+				}	
+				//射击到静态物体
+				else if (Impact.GetActor()->IsRootComponentStatic() && Impact.GetActor()->IsRootComponentStationary())
+				{
+					ProcessInstantHit_Confirm(Impact, Origin, ShootDir, RandomSeed, ReticleSpread);
+				}
+				//射击到敌人
+				else
+				{
+					//获取包围盒
+					const FBox HitBox = Impact.GetActor()->GetComponentsBoundingBox();
+
+					//计算包围盒长度
+					FVector BoxExtent = (HitBox.Max - HitBox.Min)*0.5f;
+					//对包围盒进行弹性扩张
+					BoxExtent *= InstantConfig.ClientSideHitLeeWay;
+
+					//防止一些非常薄的对象，否则计算不精准
+					BoxExtent.X = FMath::Max(20.0f, BoxExtent.X);
+					BoxExtent.Y = FMath::Max(20.0f, BoxExtent.Y);
+					BoxExtent.Z = FMath::Max(20.0f, BoxExtent.Z);
+					
+					//计算包围盒中心
+					const FVector BoxCenter = (HitBox.Min + HitBox.Max) * 0.5f;
+					//在包围盒范围内则进行伤害处理
+					if (FMath::Abs(Impact.Location.X - BoxCenter.X) < BoxExtent.X
+						&& FMath::Abs(Impact.Location.Y - BoxCenter.Y) < BoxExtent.Y
+						&& FMath::Abs(Impact.Location.Z - BoxCenter.Z) < BoxExtent.Z)
+					{
+						ProcessInstantHit_Confirm(Impact, Origin, ShootDir, RandomSeed, ReticleSpread);
+					}
+				} 
+
+			}
+		}
+	}
 }
 
 //传递碰撞信息，以通知客户端，使其模拟开火粒子特效

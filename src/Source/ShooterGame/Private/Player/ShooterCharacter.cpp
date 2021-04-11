@@ -106,7 +106,7 @@ void AShooterCharacter::PostInitializeComponents()
 
 bool AShooterCharacter::IsFirstPerson() const
 {
-	return IsAlive() && Controller!=NULL && Controller->IsLocalPlayerController();
+	return IsAlive() && Controller != NULL && Controller->IsLocalPlayerController();
 }
 
 void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
