@@ -291,6 +291,12 @@ FVector AShooterWeapon::GetMuzzleLocation() const
 	return UseMesh->GetSocketLocation(MuzzleAttachPoint);
 }
 
+FVector AShooterWeapon::GetMuzzleDirection() const
+{
+	USkeletalMeshComponent* UseMesh = GetWeaponMesh();
+	return UseMesh->GetSocketRotation(MuzzleAttachPoint).Vector();
+}
+
 //确定武器所处状态
 void AShooterWeapon::DetermineWeaponState()
 {

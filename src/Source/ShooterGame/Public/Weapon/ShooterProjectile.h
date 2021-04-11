@@ -34,6 +34,10 @@ public:
 
 	void Explode(const FHitResult& ImpactResult);
 
+	virtual void PostNetReceiveVelocity(const FVector& NewVelocity);
+
+	UFUNCTION()
+	void OnRep_Exploded();
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Projectile")
 	USphereComponent* CollisionComp;
@@ -50,5 +54,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TSubclassOf<class AShooterExplosionEffect> Explosion;
+
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_Exploded)
+	bool bExploded;
 
 };

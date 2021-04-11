@@ -111,7 +111,8 @@ protected:
 
 	bool bIsTargeting;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	//同步生命值
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Health")
 	float Health;
 
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_LastTakenHitInfo)

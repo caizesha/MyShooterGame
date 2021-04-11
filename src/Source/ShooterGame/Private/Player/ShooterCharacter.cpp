@@ -331,7 +331,8 @@ void AShooterCharacter::SpawnDefaultInventory()
 	//设置第一把武器为默认武器
 	if (Inventory.Num() > 0)
 	{
-		CurrentWeapon = Inventory[0];
+		//CurrentWeapon = Inventory[0];
+		CurrentWeapon = Inventory[1];
 		CurrentWeapon->OnEquip(nullptr);
 	}
 }
@@ -433,5 +434,6 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	//收集改写的属性，属性会在所有的客户端连接里面同步
 	DOREPLIFETIME(AShooterCharacter, CurrentWeapon);
 	DOREPLIFETIME(AShooterCharacter, LastTakeHitInfo);
+	DOREPLIFETIME(AShooterCharacter, Health);
 
 }

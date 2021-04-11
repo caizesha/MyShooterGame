@@ -100,6 +100,8 @@ public:
 
 	FVector GetMuzzleLocation() const;
 
+	FVector GetMuzzleDirection() const;
+
 	void StartFire();
 
 	void StopFire();

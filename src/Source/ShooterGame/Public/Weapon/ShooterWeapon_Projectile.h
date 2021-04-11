@@ -26,6 +26,18 @@ struct FProjectileWeaponData
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<UDamageType> DamageType;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	float ProjectileLife;
+
+	FProjectileWeaponData()
+	{
+		ProjectileClass = NULL;
+		ExplosionDamage = 100;
+		ExplosionRadius = 300;
+		DamageType = UDamageType::StaticClass();
+		ProjectileLife = 10.0f;
+	}
 };
 
 UCLASS()
@@ -37,6 +49,9 @@ public:
 	void FireWeapon();
 
 	void ApplyWeaponConfig(FProjectileWeaponData& Data);
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerFireProjectile(FVector Origin, FVector_NetQuantizeNormal ShootDir);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
