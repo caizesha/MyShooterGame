@@ -104,6 +104,16 @@ void AShooterCharacter::PostInitializeComponents()
 	}
 }
 
+void AShooterCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	//当character销毁时，通知销毁背包
+	DestroyedInventory();
+
+
+}
+
 bool AShooterCharacter::IsFirstPerson() const
 {
 	return IsAlive() && Controller != NULL && Controller->IsLocalPlayerController();
@@ -331,9 +341,26 @@ void AShooterCharacter::SpawnDefaultInventory()
 	//设置第一把武器为默认武器
 	if (Inventory.Num() > 0)
 	{
-		//CurrentWeapon = Inventory[0];
-		CurrentWeapon = Inventory[1];
+		CurrentWeapon = Inventory[0];
 		CurrentWeapon->OnEquip(nullptr);
+	}
+}
+
+void AShooterCharacter::DestroyedInventory()
+{
+	if (Role < ROLE_Authority)
+	{
+		return;
+	}
+
+	for (int i = Inventory.Num()-1; i >= 0; i--)
+	{
+		AShooterWeapon* Weapon = Inventory[i];
+		if (Weapon)
+		{
+			RemoveWeaponObject(Weapon);
+			Weapon->Destroy();
+		}
 	}
 }
 
@@ -341,8 +368,17 @@ void AShooterCharacter::AddWeaponObject(AShooterWeapon* weapon)
 {
 	if (weapon)
 	{
-		weapon->SetPawnOwner(this);
+		weapon->OnEnterInventory(this);
 		Inventory.AddUnique(weapon);
+	}
+}
+
+void AShooterCharacter::RemoveWeaponObject(AShooterWeapon* weapon)
+{
+	if (weapon)
+	{
+		weapon->OnLeaveInventory();
+		Inventory.RemoveSingle(weapon);
 	}
 }
 

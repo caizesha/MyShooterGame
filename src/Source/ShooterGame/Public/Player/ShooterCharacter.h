@@ -31,6 +31,8 @@ public:
 
 	virtual void PostInitializeComponents() override;
 
+	virtual void Destroyed() override;
+
 	bool IsFirstPerson() const;
 
 	void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation);
@@ -75,8 +77,12 @@ public:
 
 	void SpawnDefaultInventory();
 
+	void DestroyedInventory();
+
 	void AddWeaponObject(AShooterWeapon* weapon);
-	
+
+	void RemoveWeaponObject(AShooterWeapon* weapon);
+
 	void OnNextWeapon();
 
 	//重写父类播放蒙太奇动画的接口

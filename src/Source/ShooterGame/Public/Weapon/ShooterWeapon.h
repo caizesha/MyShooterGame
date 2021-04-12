@@ -177,6 +177,13 @@ public:
 	float PlayMontageAnimation(const FWeaponAnim& Animation);
 
 	void StopMontageAnimation(const FWeaponAnim& Animation);
+
+	virtual void OnEnterInventory(AShooterCharacter * NewOwner);
+	virtual void OnLeaveInventory();
+
+	bool IsAttachedToPawn() const;
+
+	virtual void Destroyed() override;
 protected:
 	UPROPERTY(EditAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* WeaponMesh1P;

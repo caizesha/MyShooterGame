@@ -753,6 +753,37 @@ void AShooterWeapon::StopMontageAnimation(const FWeaponAnim& Animation)
 	}
 }
 
+void AShooterWeapon::OnEnterInventory(AShooterCharacter * NewOwner)
+{
+	SetPawnOwner(NewOwner);
+}
+
+void AShooterWeapon::OnLeaveInventory()
+{
+	if (Role == ROLE_Authority)
+	{
+		SetPawnOwner(NULL);
+
+	}
+
+	//确保挂载在pawn上
+	if (IsAttachedToPawn())
+	{
+		OnUnEquip();
+	}
+}
+
+bool AShooterWeapon::IsAttachedToPawn() const
+{
+	return bIsEquiped || bPendingEquip;
+}
+
+void AShooterWeapon::Destroyed()
+{
+	Super::Destroyed();
+
+	StopSimulateWeaponFire();
+}
 //获取生命周期同步属性，该函数由系统调用
 void AShooterWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
