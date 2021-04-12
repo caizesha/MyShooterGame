@@ -37,7 +37,7 @@ struct FWeaponData
 	{
 		AmmoPerClip = 100;
 		InitialClips = 20;
-		TimeBetweenShots = 1.0f;
+		TimeBetweenShots = 0.1f;
 	}
 };
 
@@ -81,6 +81,15 @@ protected:
 	void OnRep_Fire();
 
 	bool ShouldDealDamage(AActor* TestActor) const;
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStartReload();
+
+	UFUNCTION()
+	void OnRep_Reload();
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerHandleFiring();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -207,12 +216,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	FWeaponData WeaponConfig;
 
+	//同步子弹数量
 	//当前子弹总数量
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, Replicated)
 	int32 CurrentAmmo;
 	
 	//当前弹夹子弹数量
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, Replicated)
 	int32 CurrentAmmoInClip;
 	
 	AShooterCharacter* PawnOwner;
@@ -225,6 +235,7 @@ private:
 	
 	bool bIsEquiped;
 	//是否需要装子弹
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_Reload)
 	bool bPendingReload;
 	
 	//设置同步属性

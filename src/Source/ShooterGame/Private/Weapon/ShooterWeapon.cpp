@@ -181,6 +181,21 @@ void AShooterWeapon::ServerStartFire_Implementation()
 	StartFire();
 }
 
+bool AShooterWeapon::ServerHandleFiring_Validate()
+{
+	return true;
+}
+
+void AShooterWeapon::ServerHandleFiring_Implementation()
+{
+	//更新子弹数量
+	const bool bShouldUpdate = CurrentAmmoInClip > 0 && CanFire();
+	if (bShouldUpdate)
+	{
+		UsedAmmo();
+	}
+}
+
 void AShooterWeapon::StopFire()
 {
 	//客户端：通知服务端执行
@@ -233,6 +248,34 @@ bool AShooterWeapon::ShouldDealDamage(AActor* TestActor) const
 		
 	}
 	return false;
+}
+
+bool AShooterWeapon::ServerStartReload_Validate()
+{
+	return true;
+}
+
+void AShooterWeapon::ServerStartReload_Implementation()
+{
+	StartReload();
+}
+
+void AShooterWeapon::OnRep_Reload()
+{
+	if (bPendingReload)
+	{
+		PlayMontageAnimation(ReloadAnim);
+
+		if (PawnOwner)
+		{
+			PlayWeaponSound(ReloadSound);
+		}
+	}
+	else
+	{
+		StopMontageAnimation(ReloadAnim);
+	}
+
 }
 
 void AShooterWeapon::SimulateWeaponFire()
@@ -424,8 +467,11 @@ void AShooterWeapon::HandleStartReloadState()
 	}
 
 	GetWorldTimerManager().SetTimer(TimerHandle_StopReload, this, &AShooterWeapon::StopReload, AnimDuration, false);
-	GetWorldTimerManager().SetTimer(TimerHandle_ReloadWeapon, this, &AShooterWeapon::ReloadWeapon, FMath::Max(AnimDuration - 0.1f, 0.1f), false);
-
+	if (Role == ROLE_Authority)
+	{
+		GetWorldTimerManager().SetTimer(TimerHandle_ReloadWeapon, this, &AShooterWeapon::ReloadWeapon, FMath::Max(AnimDuration - 0.1f, 0.1f), false);
+	}
+	
 	if(PawnOwner)
 	{
 		PlayWeaponSound(ReloadSound);
@@ -510,6 +556,10 @@ void AShooterWeapon::OnEquipFinished()
 
 void AShooterWeapon::StartReload()
 {
+	if (Role < ROLE_Authority)
+	{
+		ServerStartReload();
+	}
 	if (!bPendingReload && CanReload())
 	{
 		bPendingReload = true;
@@ -563,12 +613,19 @@ void AShooterWeapon::HandleFiring()
 		StartReload();
 	}
 	
+	//通知服务器
+	if (PawnOwner && PawnOwner->IsLocallyControlled())
+	{
+		if (Role < ROLE_Authority)
+		{
+			ServerHandleFiring();
+		}
+	}
 
 	bRefiring = (CurrentState == EWeaponState::Firing) && (WeaponConfig.TimeBetweenShots > 0.0f);
 	if (bRefiring)
 	{
 		GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &AShooterWeapon::HandleFiring, WeaponConfig.TimeBetweenShots, false);
-
 	}
 
 }
@@ -703,4 +760,8 @@ void AShooterWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	//条件同步：跳过Owner的复制
 	DOREPLIFETIME_CONDITION(AShooterWeapon, bWantToFire, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AShooterWeapon, bPendingReload, COND_SkipOwner);
+	//只通知到Owner
+	DOREPLIFETIME_CONDITION(AShooterWeapon, CurrentAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AShooterWeapon, CurrentAmmoInClip, COND_OwnerOnly);
 }
